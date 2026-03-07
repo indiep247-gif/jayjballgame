@@ -1,0 +1,1874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>JayJ – Cheese Hunter from Brum</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;900&display=swap');
+  :root {
+    --yellow:#FFD93D; --orange:#FF6B35; --green:#6BCB77;
+    --red:#FF4560; --bg:#1a0a2e; --panel:#2d1b5e; --text:#fff8e7;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background:var(--bg); font-family:'Nunito',sans-serif; color:var(--text);
+    overflow:hidden; height:100vh;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    user-select:none;
+  }
+  button { touch-action:manipulation; }
+  canvas { touch-action:none; }
+  #joystick-wrap, #dpad-wrap { touch-action:none; }
+  body::before {
+    content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background-image:
+      radial-gradient(1px 1px at 20% 30%,rgba(255,255,255,.4) 0%,transparent 100%),
+      radial-gradient(1px 1px at 60% 70%,rgba(255,255,255,.3) 0%,transparent 100%),
+      radial-gradient(1px 1px at 80% 20%,rgba(255,255,255,.5) 0%,transparent 100%),
+      radial-gradient(1px 1px at 10% 80%,rgba(255,255,255,.2) 0%,transparent 100%),
+      radial-gradient(2px 2px at 50% 50%,rgba(255,217,61,.15) 0%,transparent 100%);
+  }
+  #screen-start, #screen-gameover, #screen-shop, #screen-leaderboard, #screen-race, #screen-race-result, #screen-race-waiting, #screen-account {
+    display:none; position:fixed; inset:0;
+    flex-direction:column; align-items:center; justify-content:center;
+    gap:14px; text-align:center; z-index:10; padding:16px;
+    overflow-y:auto;
+  }
+  #screen-start { display:flex; }
+  #screen-game {
+    display:none; flex-direction:column; align-items:center;
+    position:fixed; inset:0; z-index:10;
+  }
+  .title {
+    font-family:'Fredoka One',cursive; font-size:clamp(2.5rem,8vw,4.5rem);
+    color:var(--yellow); text-shadow:4px 4px 0 var(--orange),6px 6px 20px rgba(255,107,53,.5);
+    letter-spacing:2px; line-height:1;
+  }
+  .subtitle { font-size:clamp(.85rem,2.5vw,1.1rem); color:#c9a0ff; font-weight:700; letter-spacing:1px; }
+  .brum-tag {
+    background:var(--orange); color:#fff; padding:4px 16px; border-radius:50px;
+    font-size:.85rem; font-weight:900; letter-spacing:2px; text-transform:uppercase;
+  }
+  .instructions {
+    background:var(--panel); border:2px solid #4a2d8a; border-radius:16px;
+    padding:14px 22px; font-size:.9rem; line-height:1.85; max-width:340px;
+  }
+  .eat  { color:var(--yellow); font-weight:900; }
+  .avoid{ color:var(--red);    font-weight:900; }
+  .bonus{ color:var(--green);  font-weight:900; }
+  .btn {
+    font-family:'Fredoka One',cursive; font-size:1.5rem; padding:14px 48px;
+    border-radius:50px; border:none; cursor:pointer; background:var(--yellow); color:#1a0a2e;
+    box-shadow:0 6px 0 var(--orange),0 8px 20px rgba(255,217,61,.3);
+    transition:transform .1s,box-shadow .1s; letter-spacing:1px;
+  }
+  .btn:hover  { transform:translateY(-2px); box-shadow:0 8px 0 var(--orange),0 12px 24px rgba(255,217,61,.4); }
+  .btn:active { transform:translateY(4px);  box-shadow:0 2px 0 var(--orange); }
+
+  /* HUD */
+  #hud {
+    display:flex; justify-content:space-between; align-items:center; gap:8px;
+    width:min(540px,95vw); padding:6px 14px;
+    background:var(--panel); border-radius:14px 14px 0 0;
+    border:2px solid #4a2d8a; border-bottom:none;
+  }
+  .hud-col { display:flex; flex-direction:column; }
+  .score-label { font-size:.62rem; color:#c9a0ff; font-weight:700; text-transform:uppercase; letter-spacing:1px; }
+  .score-val { font-family:'Fredoka One',cursive; font-size:1.35rem; color:var(--yellow); }
+  .hi-val    { font-family:'Fredoka One',cursive; font-size:1.35rem; color:#c9a0ff; }
+  #level-badge {
+    font-family:'Fredoka One',cursive; font-size:1rem;
+    background:var(--orange); padding:4px 12px; border-radius:50px; color:#fff; flex-shrink:0;
+  }
+  #mute-btn {
+    background:none; border:2px solid #4a2d8a; border-radius:50%; width:34px; height:34px;
+    font-size:1rem; cursor:pointer; color:var(--text); flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    transition:background .15s;
+  }
+  #mute-btn:hover { background:#4a2d8a; }
+  .lives { display:flex; gap:3px; justify-content:flex-end; margin-top:2px; }
+  .life  { width:18px; height:18px; background:var(--red); border-radius:50%; box-shadow:0 0 7px rgba(255,69,96,.6); transition:background .3s; }
+  .life.lost   { background:#333; box-shadow:none; }
+  .life.gained { animation:lifeGain .5s ease; }
+  @keyframes lifeGain { 0%{transform:scale(2.2);}100%{transform:scale(1);} }
+
+  canvas { display:block; border:2px solid #4a2d8a; border-top:none; border-radius:0 0 14px 14px; background:#120820; }
+
+  /* Popups */
+  .popup {
+    position:fixed; font-family:'Fredoka One',cursive; font-size:1.3rem;
+    pointer-events:none; animation:floatUp .9s ease forwards; z-index:200; white-space:nowrap;
+  }
+  @keyframes floatUp {
+    0%  { opacity:1; transform:translateY(0) scale(1); }
+    100%{ opacity:0; transform:translateY(-70px) scale(1.3); }
+  }
+
+  /* JOYSTICK */
+  #joystick-wrap {
+    display:none; position:relative; margin-top:10px;
+    width:150px; height:150px; flex-shrink:0;
+  }
+  #joystick-base {
+    position:absolute; inset:0; border-radius:50%;
+    background:rgba(74,45,138,.45); border:2px solid #4a2d8a;
+  }
+  #joystick-knob {
+    position:absolute; width:56px; height:56px; border-radius:50%;
+    background:radial-gradient(circle at 35% 35%,#d580ff,#6a00cc);
+    box-shadow:0 0 18px rgba(155,48,255,.75);
+    pointer-events:none;
+  }
+
+  /* DPAD */
+  #dpad-wrap {
+    display:none; margin-top:10px;
+    display:none; flex-direction:column; align-items:center; gap:4px;
+  }
+  .dpad-row { display:flex; gap:4px; }
+  .dpad-btn {
+    font-size:1.4rem; background:var(--panel); border:2px solid #4a2d8a;
+    border-radius:10px; padding:8px 16px; color:var(--text);
+    cursor:pointer; user-select:none; -webkit-tap-highlight-color:transparent;
+    touch-action:none; transition:background .1s;
+  }
+  .dpad-btn:active, .dpad-btn.pressed { background:#4a2d8a; }
+  .dpad-spacer { width:52px; height:52px; } /* centre gap */
+
+  /* Control toggle button */
+  #ctrl-toggle {
+    background:none; border:2px solid #4a2d8a; border-radius:50%;
+    width:34px; height:34px; font-size:.9rem; cursor:pointer;
+    color:var(--text); flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    transition:background .15s;
+  }
+  #menu-btn {
+    background:none; border:2px solid #4a2d8a; border-radius:50%;
+    width:34px; height:34px; font-size:.9rem; cursor:pointer;
+    color:var(--text); flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    transition:background .15s;
+  }
+  #menu-btn:hover { background:#4a2d8a; }
+
+  /* Show controls when controlsVisible */
+  body.show-joystick #joystick-wrap { display:block; }
+  body.show-dpad     #dpad-wrap     { display:flex; }
+
+  #go-title   { font-family:'Fredoka One',cursive; font-size:clamp(2rem,6vw,3rem); color:var(--red); text-shadow:3px 3px 0 #8b0000; }
+  #final-score{ font-family:'Fredoka One',cursive; font-size:1.8rem; color:var(--yellow); }
+  #final-hi   { font-family:'Fredoka One',cursive; font-size:1.2rem; color:#c9a0ff; }
+  #final-msg  { color:#c9a0ff; font-size:.95rem; }
+
+  @keyframes hudFlash { 0%,100%{background:var(--panel);}50%{background:#2a5c22;} }
+  #hud.life-flash { animation:hudFlash .5s ease; }
+
+  .btn-hardcore {
+    font-family:'Fredoka One',cursive; font-size:1.1rem; padding:10px 36px;
+    border-radius:50px; border:2px solid var(--red); cursor:pointer;
+    background:transparent; color:var(--red);
+    box-shadow:0 4px 0 #8b0000;
+    transition:transform .1s,box-shadow .1s,background .15s;
+    letter-spacing:1px;
+  }
+  .btn-hardcore:hover  { background:rgba(255,69,96,.15); transform:translateY(-2px); }
+  .btn-hardcore:active { transform:translateY(3px); box-shadow:0 1px 0 #8b0000; }
+  #hardcore-badge {
+    display:none; background:var(--red); color:#fff;
+    font-family:'Fredoka One',cursive; font-size:.8rem;
+    padding:3px 12px; border-radius:50px; letter-spacing:1px;
+  }
+
+  /* Leaderboard */
+  #name-entry { display:flex; gap:8px; align-items:center; }
+  #name-input {
+    font-family:'Fredoka One',cursive; font-size:1.1rem;
+    padding:8px 14px; border-radius:50px; border:2px solid #4a2d8a;
+    background:var(--panel); color:var(--text); width:160px; text-align:center;
+    outline:none;
+  }
+  #name-input:focus { border-color:var(--yellow); }
+  .btn-small {
+    font-family:'Fredoka One',cursive; font-size:1rem; padding:9px 20px;
+    border-radius:50px; border:none; cursor:pointer; background:var(--yellow);
+    color:#1a0a2e; box-shadow:0 4px 0 var(--orange); transition:transform .1s;
+  }
+  .btn-small:active { transform:translateY(3px); box-shadow:0 1px 0 var(--orange); }
+  #leaderboard {
+    background:var(--panel); border:2px solid #4a2d8a; border-radius:14px;
+    padding:10px 16px; width:min(320px,90vw); max-height:200px; overflow-y:auto;
+  }
+  #leaderboard h3 { font-family:'Fredoka One',cursive; color:var(--yellow); font-size:1rem; margin-bottom:6px; text-align:center; }
+  .lb-row {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:3px 0; border-bottom:1px solid rgba(74,45,138,.4); font-size:.85rem;
+  }
+  .lb-row:last-child { border-bottom:none; }
+  .lb-rank { color:#c9a0ff; font-weight:900; width:24px; }
+  .lb-name { flex:1; padding:0 8px; }
+  .lb-score { color:var(--yellow); font-family:'Fredoka One',cursive; font-size:1rem; }
+  .lb-me { background:rgba(255,217,61,.1); border-radius:6px; }
+  #lb-status { font-size:.8rem; color:#c9a0ff; text-align:center; min-height:16px; }
+
+  /* SHOP */
+  #shop-coins {
+    font-family:'Fredoka One',cursive; font-size:1.1rem; color:var(--yellow);
+    background:var(--panel); border:2px solid #4a2d8a; border-radius:50px;
+    padding:4px 18px;
+  }
+  .shop-tabs { display:flex; gap:0; border-radius:10px; overflow:hidden; border:2px solid #4a2d8a; width:100%; }
+  .shop-tab {
+    flex:1; font-family:'Fredoka One',cursive; font-size:.8rem; padding:7px 2px;
+    border:none; cursor:pointer; background:var(--panel); color:#c9a0ff;
+    transition:background .15s;
+  }
+  .shop-tab.active { background:var(--yellow); color:#1a0a2e; }
+  .shop-grid {
+    display:grid; grid-template-columns:repeat(3,1fr); gap:8px;
+    width:100%; max-height:300px; overflow-y:auto; padding:2px;
+  }
+  .shop-item {
+    background:var(--panel); border:2px solid #4a2d8a; border-radius:12px;
+    padding:8px 4px; display:flex; flex-direction:column; align-items:center;
+    gap:4px; cursor:pointer; transition:border-color .15s, transform .1s;
+    position:relative;
+  }
+  .shop-item:hover { border-color:#c9a0ff; transform:translateY(-2px); }
+  .shop-item.owned  { border-color:var(--green); }
+  .shop-item.active-skin { border-color:var(--yellow); background:rgba(255,217,61,.1); }
+  .shop-item.locked { opacity:.6; cursor:default; }
+  .shop-preview { font-size:2rem; line-height:1; }
+  .shop-name { font-size:.7rem; font-weight:900; text-align:center; }
+  .shop-price { font-size:.7rem; color:var(--yellow); font-family:'Fredoka One',cursive; }
+  .shop-price.owned { color:var(--green); }
+  .shop-equipped { font-size:.6rem; color:var(--yellow); font-weight:900; }
+  .shop-canvas-wrap { border:2px solid #4a2d8a; border-radius:12px; overflow:hidden; }
+</style>
+</head>
+<body>
+
+<!-- RACE SCREEN -->
+<div id="screen-race">
+  <div class="title" style="font-size:2rem">🏁 Multiplayer</div>
+  <div id="race-coins" style="font-family:'Fredoka One',cursive;font-size:1rem;color:var(--yellow);background:var(--panel);border:2px solid #4a2d8a;border-radius:50px;padding:4px 16px;">🪙 0 coins</div>
+
+  <!-- Lobby -->
+  <div id="race-lobby" style="display:flex;flex-direction:column;align-items:center;gap:10px;width:100%;max-width:320px;">
+    <input id="race-name" maxlength="12" placeholder="Your name" autocomplete="off"
+      style="font-family:'Fredoka One',cursive;font-size:1.1rem;padding:8px 14px;border-radius:50px;border:2px solid #4a2d8a;background:var(--panel);color:var(--text);width:100%;text-align:center;outline:none;"/>
+    <div style="display:flex;gap:8px;width:100%;">
+      <button class="btn" style="flex:1;font-size:1rem;" id="race-host-btn">🏠 Host</button>
+      <button class="btn-hardcore" style="flex:1;font-size:1rem;" id="race-join-btn">🔗 Join</button>
+    </div>
+    <div id="race-join-row" style="display:none;flex-direction:column;align-items:center;gap:8px;width:100%;">
+      <input id="race-code-input" maxlength="4" placeholder="Enter 4-digit code" autocomplete="off"
+        style="font-family:'Fredoka One',cursive;font-size:1.5rem;padding:8px 14px;border-radius:50px;border:2px solid #39ff14;background:var(--panel);color:#39ff14;width:100%;text-align:center;outline:none;letter-spacing:6px;"/>
+      <button class="btn" id="race-join-confirm-btn" style="width:100%;">✅ Join Room</button>
+    </div>
+    <div id="race-status" style="font-size:.9rem;color:#c9a0ff;min-height:20px;text-align:center;"></div>
+  </div>
+
+  <!-- Waiting room -->
+  <div id="race-waiting" style="display:none;flex-direction:column;align-items:center;gap:10px;width:100%;max-width:320px;">
+    <div style="background:var(--panel);border:2px solid #39ff14;border-radius:16px;padding:14px 20px;text-align:center;width:100%;">
+      <div style="font-family:'Fredoka One',cursive;font-size:.9rem;color:#c9a0ff;margin-bottom:4px;">Room Code</div>
+      <div id="race-room-code" style="font-family:'Fredoka One',cursive;font-size:3rem;color:#39ff14;letter-spacing:8px;"></div>
+      <div style="font-size:.8rem;color:#c9a0ff;margin-top:4px;">Share this with your mates! (up to 4 players)</div>
+    </div>
+    <div id="race-players" style="background:var(--panel);border:2px solid #4a2d8a;border-radius:12px;padding:10px 16px;width:100%;font-size:.9rem;"></div>
+    <div id="race-duration-row" style="display:none;flex-direction:column;align-items:center;gap:6px;width:100%;">
+      <div style="font-family:'Fredoka One',cursive;color:#c9a0ff;font-size:.9rem;">⏱️ Race Duration</div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn-small race-dur-btn" data-dur="30">30s</button>
+        <button class="btn-small race-dur-btn" data-dur="60">60s</button>
+        <button class="btn-small race-dur-btn" data-dur="90">90s</button>
+        <button class="btn-small race-dur-btn" data-dur="120">120s</button>
+      </div>
+    </div>
+    <button class="btn" id="race-start-btn" style="display:none;background:#39ff14;color:#0a0a0a;border-color:#1a7a00;width:100%;">🏁 Start Race!</button>
+    <div id="race-wait-status" style="font-size:.9rem;color:#c9a0ff;min-height:20px;text-align:center;">Waiting for players...</div>
+  </div>
+
+  <button class="btn-hardcore" onclick="leaveRace()" style="margin-top:4px;">← Back</button>
+</div>
+
+<!-- RACE HUD overlay (shown during race game) -->
+<div id="race-hud" style="display:none;position:fixed;bottom:0;left:50%;transform:translateX(-50%);z-index:100;background:rgba(10,10,20,.88);border:2px solid #39ff14;border-bottom:none;border-radius:14px 14px 0 0;padding:6px 16px;font-family:'Fredoka One',cursive;font-size:.85rem;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center;max-width:100%;">
+  <span style="color:#39ff14;">⏱️ <span id="race-timer-display">60</span>s</span>
+  <span id="race-hud-scores" style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;"></span>
+</div>
+
+<!-- RACE RESULT -->
+<div id="screen-race-result">
+  <div id="race-result-title" style="font-family:'Fredoka One',cursive;font-size:2.5rem;"></div>
+  <div id="race-result-scores" style="background:var(--panel);border:2px solid #4a2d8a;border-radius:14px;padding:14px 24px;font-family:'Fredoka One',cursive;font-size:1rem;display:flex;flex-direction:column;gap:6px;min-width:220px;"></div>
+  <button class="btn" onclick="showScreen('screen-start');leaveRace();">🏠 Main Menu</button>
+</div>
+
+<!-- RACE WAITING (died early) -->
+<div id="screen-race-waiting">
+  <div class="title" style="font-size:2rem">💀 You Died!</div>
+  <div style="background:var(--panel);border:2px solid #4a2d8a;border-radius:16px;padding:20px 28px;text-align:center;max-width:300px;width:100%;display:flex;flex-direction:column;gap:10px;">
+    <div style="font-family:'Fredoka One',cursive;color:#c9a0ff;font-size:1rem;">Waiting for others to finish...</div>
+    <div id="race-wait-timer" style="font-family:'Fredoka One',cursive;font-size:3rem;color:#39ff14;">60</div>
+    <div id="race-wait-scores" style="font-size:.9rem;display:flex;flex-direction:column;gap:4px;"></div>
+    <div style="font-family:'Fredoka One',cursive;color:#FFD93D;font-size:.85rem;">Your score: <span id="race-wait-myscore">0</span></div>
+  </div>
+</div>
+<div id="screen-leaderboard">
+  <div class="title" style="font-size:2rem">🏆 Leaderboard</div>
+  <div style="display:flex;gap:0;border-radius:10px;overflow:hidden;border:2px solid #4a2d8a;width:100%;max-width:340px;">
+    <button class="shop-tab active" id="menu-lb-tab-normal"   onclick="menuLbTab('normal')">🏆 Normal</button>
+    <button class="shop-tab"        id="menu-lb-tab-hardcore" onclick="menuLbTab('hardcore')">☠️ Hardcore</button>
+  </div>
+  <div id="menu-lb-rows" style="background:var(--panel);border:2px solid #4a2d8a;border-radius:14px;padding:10px 16px;width:100%;max-width:340px;min-height:80px;">Loading...</div>
+  <button class="btn" onclick="closeLeaderboard()">← Back</button>
+</div>
+
+<!-- SHOP -->
+<div id="screen-shop">
+  <div class="title" style="font-size:2rem">🛍️ Shop</div>
+  <div id="shop-coins">🪙 0 coins</div>
+  <div class="shop-tabs">
+    <button class="shop-tab active" onclick="shopTab('colours')">🎨 Colours</button>
+    <button class="shop-tab" onclick="shopTab('hats')">🎩 Hats</button>
+    <button class="shop-tab" onclick="shopTab('chars')">👾 Chars</button>
+    <button class="shop-tab" onclick="shopTab('effects')">✨ Effects</button>
+  </div>
+  <div class="shop-grid" id="shop-grid"></div>
+  <button class="btn" style="font-size:1.1rem;padding:10px 36px;" onclick="closeShop()">← Back</button>
+</div>
+
+<!-- ACCOUNT SCREEN -->
+<div id="screen-account">
+  <div class="title" style="font-size:2rem;">👤 Account</div>
+  <div id="acct-tabs" style="display:flex;gap:8px;">
+    <button class="btn-small" id="acct-tab-login" onclick="acctTab('login')" style="flex:1">Log In</button>
+    <button class="btn-small" id="acct-tab-signup" onclick="acctTab('signup')" style="flex:1;background:#2a1a5e;border-color:#c9a0ff;color:#c9a0ff;">Sign Up</button>
+  </div>
+  <div style="background:var(--panel);border:2px solid #fa5c5c;border-radius:14px;padding:12px 16px;max-width:320px;width:100%;font-size:.78rem;color:#fa5c5c;text-align:left;line-height:1.6;">
+    ⚠️ <b>There is NO password reset!</b> Save your username and password somewhere safe before creating an account.
+  </div>
+  <input id="acct-user" type="text" maxlength="20" placeholder="Username" style="width:100%;max-width:300px;padding:10px 14px;border-radius:50px;border:2px solid #4a2d8a;background:#1a0a3e;color:#fff;font-family:'Fredoka One',cursive;font-size:1rem;outline:none;box-sizing:border-box;">
+  <input id="acct-pass" type="password" maxlength="40" placeholder="Password" style="width:100%;max-width:300px;padding:10px 14px;border-radius:50px;border:2px solid #4a2d8a;background:#1a0a3e;color:#fff;font-family:'Fredoka One',cursive;font-size:1rem;outline:none;box-sizing:border-box;">
+  <div id="acct-status" style="font-size:.82rem;color:#fa5c5c;min-height:1.2em;"></div>
+  <button class="btn" id="acct-submit-btn" onclick="acctSubmit()">Log In</button>
+  <button class="btn-small" onclick="showScreen('screen-start')">← Back</button>
+</div>
+
+<!-- START -->
+<div id="screen-start">
+  <div style="background:rgba(201,160,255,.12);border:1.5px solid #c9a0ff;border-radius:10px;padding:7px 12px;max-width:320px;width:100%;font-size:.72rem;color:#c9a0ff;text-align:center;line-height:1.6;">
+    📱 Playing from the QR code? Clear your cookies/cache to get the latest update!
+  </div>
+  <div class="brum-tag">🏙️ From Birmingham</div>
+  <div class="title">JayJ</div>
+  <div class="subtitle">The Cheese-Hungry Ball from Brum</div>
+  <div class="instructions">
+    <span class="eat">🧀 Eat cheese</span> to score points!<br>
+    <span class="avoid">🥦 Dodge veggies</span> or lose a life!<br>
+    <span class="bonus">❤️ Every 1000 pts</span> = bonus life (max 5)!<br><br>
+    Arrow keys / WASD <em>or</em> use the joystick.
+  </div>
+  <button class="btn" id="play-btn" onclick="togglePlayModes()">🎮 PLAY</button>
+  <div id="play-modes" style="display:none;flex-direction:column;gap:8px;width:100%;max-width:340px;">
+    <button class="btn" id="start-btn">🧀 CLASSIC MODE</button>
+    <button class="btn-hardcore" id="hardcore-btn">☠️ HARDCORE MODE</button>
+    <button class="btn" id="race-btn" style="background:var(--panel);border:2px solid #39ff14;color:#39ff14;box-shadow:0 4px 0 #1a7a00;">🏁 MULTIPLAYER</button>
+  </div>
+  <a href="https://kingfelipe.itch.io/jayj-cheese-ball-hunter" target="_blank" style="font-family:'Fredoka One',cursive;font-size:1rem;padding:10px 28px;border-radius:50px;border:2px solid #fa5c5c;background:var(--panel);color:#fa5c5c;text-decoration:none;letter-spacing:1px;">🎮 Play Latest Update on itch.io</a>
+  <!-- Account button / logged in display -->
+  <div id="acct-menu-area" style="width:100%;max-width:340px;display:flex;flex-direction:column;align-items:center;gap:6px;">
+    <div id="acct-guest-warn" style="display:none;background:rgba(250,92,92,.12);border:1.5px solid #fa5c5c;border-radius:10px;padding:6px 12px;font-size:.72rem;color:#fa5c5c;text-align:center;line-height:1.5;">
+      🕹️ Playing as guest — progress may be wiped on updates.<br>Log in to save your coins &amp; skins!
+    </div>
+    <div id="acct-loggedin-bar" style="display:none;background:rgba(57,255,20,.1);border:1.5px solid #39ff14;border-radius:10px;padding:6px 14px;font-size:.82rem;color:#39ff14;display:none;align-items:center;gap:10px;width:100%;box-sizing:border-box;justify-content:space-between;">
+      <span>👤 <span id="acct-loggedin-name"></span></span>
+      <button onclick="acctLogout()" style="font-family:'Fredoka One',cursive;font-size:.72rem;background:none;border:1px solid #39ff14;color:#39ff14;border-radius:20px;padding:2px 10px;cursor:pointer;">Log Out</button>
+    </div>
+    <button id="acct-open-btn" class="btn-small" onclick="showScreen('screen-account')" style="width:100%;">👤 Log In / Sign Up</button>
+  </div>
+  <div style="display:flex;gap:8px;width:100%;max-width:340px;">
+    <button class="btn-small" style="flex:1" id="shop-open-btn">🛍️ Shop</button>
+    <button class="btn-small" style="flex:1" id="lb-open-btn">🏆 Leaderboard</button>
+    <div style="position:relative;flex:1;display:flex;flex-direction:column;align-items:center;">
+      <button class="btn-small" style="width:100%" id="ctrl-menu-btn" onclick="cycleControls()">🕹️ Keyboard</button>
+      <div id="mobile-ctrl-hint" style="position:absolute;top:calc(100% + 10px);left:50%;transform:translateX(-50%);white-space:nowrap;font-family:'Fredoka One',cursive;font-size:.72rem;color:#39ff14;background:rgba(10,10,20,.92);border:2px solid #39ff14;border-radius:10px;padding:4px 10px;pointer-events:none;z-index:5;">
+        <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;border-bottom:10px solid #39ff14;"></div>
+        On mobile? Change to D-Pad or Joystick!
+      </div>
+    </div>
+  </div>
+  <div id="hardcore-badge">☠️ HARDCORE — 1 LIFE ONLY</div>
+  <details style="max-width:340px;width:100%;text-align:left;">
+    <summary style="font-family:'Fredoka One',cursive;color:#c9a0ff;cursor:pointer;font-size:.95rem;letter-spacing:1px;">📋 Patch Notes</summary>
+    <div style="background:var(--panel);border:2px solid #4a2d8a;border-radius:12px;padding:10px 14px;margin-top:6px;font-size:.78rem;line-height:1.8;max-height:180px;overflow-y:auto;">
+      <b style="color:var(--yellow)">v1.18.1</b><br>
+      • 🎮 Play button replaces 3 separate mode buttons — cleaner menu!<br>
+      • Renamed to Classic Mode<br><br>
+      <b style="color:var(--yellow)">v1.18</b><br>
+      • 👤 Account system — sign up to save coins, skins &amp; high score across updates!<br>
+      • 🕹️ Guests can still play normally with a warning<br>
+      • 🔐 Auto login on return visits<br><br>
+      <b style="color:var(--yellow)">v1.17.3</b><br>
+      • 📱 Control hint arrow always visible on main menu<br><br>
+      <b style="color:var(--yellow)">v1.17.2</b><br>
+      • 🐛 Bug fix: Race waiting screen showing behind main menu<br><br>
+      <b style="color:var(--yellow)">v1.17</b><br>
+      • 👥 4 player multiplayer — up to 4 people in one room!<br>
+      • 🏆 Podium results screen with 🥇🥈🥉 places<br>
+      • Renamed Race Mode to Multiplayer<br><br>
+      <b style="color:var(--yellow)">v1.16.5</b><br>
+      • ⚡ Delta time fix — game now runs at the same speed on all displays (60hz, 120hz etc.)<br><br>
+      <b style="color:var(--yellow)">v1.16.4</b><br>
+      • 🎮 itch.io button added to main menu<br><br>
+      <b style="color:var(--yellow)">v1.16.3</b><br>
+      • 🔧 Race HUD moved to bottom so it doesn't block game HUD<br><br>
+      <b style="color:var(--yellow)">v1.16.2</b><br>
+      • 🔧 Fixed back button in race mode<br><br>
+      <b style="color:var(--yellow)">v1.16.1</b><br>
+      • 🔧 Fixed race screen showing on main menu<br>
+      • Renamed button to RACE MODE (co-op)<br><br>
+      <b style="color:var(--yellow)">v1.16</b><br>
+      • 🏁 Race Mode — real-time multiplayer with room codes!<br>
+      • Live score sync with opponent during race<br>
+      • Custom race duration (30s / 60s / 90s / 120s)<br><br>
+      <b style="color:var(--yellow)">v1.15.3</b><br>
+      • 🏆 Leaderboard button on main menu<br>
+      • 🔧 Fixed UI screens stacking bug<br><br>
+      <b style="color:var(--yellow)">v1.15.2</b><br>
+      • 🚫 Profanity filter on leaderboard names<br>
+      • "By Indie Price" credit added<br><br>
+      <b style="color:var(--yellow)">v1.15.1</b><br>
+      • 🏠 Main menu button added to game over screen<br><br>
+      <b style="color:var(--yellow)">v1.15</b><br>
+      • 🛍️ Shop added — buy colours, hats, characters and effects with coins!<br>
+      • Earn coins by eating food (more at higher levels)<br><br>
+      <b style="color:var(--yellow)">v1.14</b><br>
+      • Level up every 5 foods eaten (not score-based)<br><br>
+      <b style="color:var(--yellow)">v1.13</b><br>
+      • Veggie hit grows you by +4px (was 2x size — too big!)<br>
+      • Eat 10 good foods in a row → shrink by 3px 💪<br>
+      • Patch notes added 📋<br><br>
+      <b style="color:var(--yellow)">v1.12</b><br>
+      • Eating a veggie now makes you bigger<br>
+      • Falafel (🧆) removed from cheese foods<br><br>
+      <b style="color:var(--yellow)">v1.11</b><br>
+      • Version numbering added<br>
+      • Change Controls button on main menu<br>
+      • Auto joystick on mobile<br><br>
+      <b style="color:var(--yellow)">v1.10</b><br>
+      • Main menu button added in-game<br>
+      • Joystick/D-Pad/Keyboard selectable<br><br>
+      <b style="color:var(--yellow)">v1.9</b><br>
+      • Cheat code added (uiop00) for testing<br><br>
+      <b style="color:var(--yellow)">v1.8</b><br>
+      • Separate hardcore leaderboard<br><br>
+      <b style="color:var(--yellow)">v1.7</b><br>
+      • 🧀 Mouldy cheese — 10% chance, grows JayJ<br><br>
+      <b style="color:var(--yellow)">v1.6</b><br>
+      • ☠️ Hardcore mode — 1 life only<br><br>
+      <b style="color:var(--yellow)">v1.5</b><br>
+      • 🏆 Online leaderboard via Supabase<br><br>
+      <b style="color:var(--yellow)">v1.4</b><br>
+      • 🎵 Background chiptune music + mute button<br><br>
+      <b style="color:var(--yellow)">v1.3</b><br>
+      • 🕹️ Analog joystick for mobile<br>
+      • 🔊 Sound effects<br>
+      • High score tracking<br>
+      • ❤️ Bonus life every 1000pts (max 5)<br><br>
+      <b style="color:var(--yellow)">v1.0</b><br>
+      • Initial release — JayJ is born! 🎉<br>
+    </div>
+  </details>
+  <div style="font-size:.75rem;color:#4a2d8a;font-weight:700;letter-spacing:1px;">v1.18.1</div>
+</div>
+<div style="position:fixed;bottom:8px;left:12px;font-size:.7rem;color:#3a1a6e;font-weight:700;letter-spacing:1px;z-index:5;pointer-events:none;">By Indie Price</div>
+
+<!-- GAME -->
+<div id="screen-game">
+  <div id="hud">
+    <div class="hud-col">
+      <span class="score-label">Score</span>
+      <span class="score-val" id="score-display">0</span>
+    </div>
+    <div id="level-badge">LVL 1</div>
+    <div id="hardcore-badge">☠️ HARDCORE</div>
+    <button id="mute-btn" onclick="toggleMute()">🔊</button>
+    <button id="menu-btn" onclick="goToMenu()" title="Main menu">🏠</button>
+    <div class="hud-col" style="align-items:flex-end">
+      <span class="score-label">Best</span>
+      <span class="hi-val" id="hi-display">0</span>
+    </div>
+    <div class="hud-col" style="align-items:flex-end">
+      <span class="score-label">Lives</span>
+      <div class="lives" id="lives-display"></div>
+    </div>
+  </div>
+  <canvas id="gameCanvas"></canvas>
+  <div id="joystick-wrap">
+    <div id="joystick-base"></div>
+    <div id="joystick-knob"></div>
+  </div>
+  <div id="dpad-wrap">
+    <div class="dpad-row"><div class="dpad-spacer"></div><button class="dpad-btn" id="btn-up">▲</button><div class="dpad-spacer"></div></div>
+    <div class="dpad-row"><button class="dpad-btn" id="btn-left">◀</button><div class="dpad-spacer"></div><button class="dpad-btn" id="btn-right">▶</button></div>
+    <div class="dpad-row"><div class="dpad-spacer"></div><button class="dpad-btn" id="btn-down">▼</button><div class="dpad-spacer"></div></div>
+  </div>
+</div>
+
+<!-- GAME OVER -->
+<div id="screen-gameover">
+  <div id="go-title">GAME OVER, BAB!</div>
+  <div id="final-score">Score: 0</div>
+  <div id="final-hi"></div>
+  <div id="final-msg"></div>
+  <div id="name-entry">
+    <input id="name-input" maxlength="12" placeholder="Your name" autocomplete="off" spellcheck="false"/>
+    <button class="btn-small" id="submit-btn">Submit 🏆</button>
+  </div>
+  <div id="lb-status"></div>
+  <div id="leaderboard">
+    <div style="display:flex;gap:0;margin-bottom:8px;border-radius:8px;overflow:hidden;border:1px solid #4a2d8a;">
+      <button id="lb-tab-normal"   onclick="switchTab('normal')"   style="flex:1;font-family:'Fredoka One',cursive;font-size:.85rem;padding:6px;border:none;cursor:pointer;background:var(--yellow);color:#1a0a2e;">🏆 Normal</button>
+      <button id="lb-tab-hardcore" onclick="switchTab('hardcore')" style="flex:1;font-family:'Fredoka One',cursive;font-size:.85rem;padding:6px;border:none;cursor:pointer;background:var(--panel);color:#c9a0ff;">☠️ Hardcore</button>
+    </div>
+    <div id="lb-rows">Loading...</div>
+  </div>
+  <button class="btn" id="restart-btn">PLAY AGAIN</button>
+  <button class="btn-hardcore" onclick="goToMenu()">🏠 Main Menu</button>
+</div>
+
+<!-- DEV CONSOLE -->
+<div id="dev-console" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#0a0a0a;border-top:2px solid #39ff14;padding:6px 10px;font-family:monospace;font-size:.85rem;">
+  <span style="color:#39ff14">DEV &gt;</span>
+  <input id="dev-input" style="background:none;border:none;outline:none;color:#39ff14;width:calc(100% - 60px);font-family:monospace;font-size:.85rem;" placeholder="type a command..." autocomplete="off" spellcheck="false"/>
+  <span id="dev-output" style="color:#aaa;font-size:.75rem;display:block;min-height:14px;"></span>
+</div>
+
+<!-- BUY CONFIRM MODAL -->
+<div id="buy-modal" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.7);align-items:center;justify-content:center;">
+  <div style="background:var(--panel);border:2px solid #4a2d8a;border-radius:16px;padding:24px;text-align:center;max-width:280px;width:90%;display:flex;flex-direction:column;gap:12px;">
+    <div id="buy-modal-text" style="font-family:'Fredoka One',cursive;font-size:1.1rem;color:var(--text);"></div>
+    <div style="display:flex;gap:8px;">
+      <button id="buy-confirm-btn" class="btn" style="flex:1;font-size:1rem;padding:8px;">✅ Buy</button>
+      <button id="buy-cancel-btn" class="btn-hardcore" style="flex:1;font-size:1rem;padding:8px;">❌ Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── AUDIO ──────────────────────────────────────────
+const AC = new (window.AudioContext || window.webkitAudioContext)();
+const resumeAC = () => AC.state === 'suspended' && AC.resume();
+['touchstart','keydown','click'].forEach(e => document.addEventListener(e, resumeAC, {once:true}));
+
+const masterGain = AC.createGain(); masterGain.gain.value = 0.7; masterGain.connect(AC.destination);
+const sfxGain    = AC.createGain(); sfxGain.gain.value    = 1.0; sfxGain.connect(AC.destination);
+const musicGain  = AC.createGain(); musicGain.gain.value  = 0.5; musicGain.connect(masterGain);
+
+let musicMuted = false;
+function toggleMute() {
+  musicMuted = !musicMuted;
+  musicGain.gain.setTargetAtTime(musicMuted ? 0 : 0.5, AC.currentTime, 0.1);
+  document.getElementById('mute-btn').textContent = musicMuted ? '🔇' : '🔊';
+}
+
+function tone(freq, type, dur, vol=0.22, delay=0) {
+  try {
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.connect(g); g.connect(sfxGain);
+    o.type = type;
+    o.frequency.setValueAtTime(freq, AC.currentTime + delay);
+    g.gain.setValueAtTime(vol, AC.currentTime + delay);
+    g.gain.exponentialRampToValueAtTime(0.001, AC.currentTime + delay + dur);
+    o.start(AC.currentTime + delay); o.stop(AC.currentTime + delay + dur);
+  } catch(e){}
+}
+
+const sfx = {
+  cheese:    () => { tone(520,'sine',.07,.2); tone(660,'sine',.1,.18,.06); tone(880,'sine',.13,.15,.13); },
+  veggie:    () => { tone(120,'sawtooth',.3,.3); tone(80,'sawtooth',.2,.2,.1); },
+  levelUp:   () => [523,659,784,1047].forEach((f,i) => tone(f,'square',.15,.15,i*.08)),
+  extraLife: () => [660,880,1100,880,1320].forEach((f,i) => tone(f,'sine',.18,.25,i*.09)),
+  gameOver:  () => [330,262,196,131].forEach((f,i) => tone(f,'sawtooth',.35,.3,i*.14)),
+};
+
+// ── MUSIC ENGINE ───────────────────────────────────
+// Bouncy chiptune banger — melody + bass + hi-hat, speeds up each level
+const MELODY = [
+  523,659,784,659, 523,392,440,523,
+  659,784,880,784, 659,523,392,523,
+  784,880,1047,880,784,659,523,659,
+  523,440,392,440, 523,659,523,392
+];
+const BASS = [
+  131,131,196,131, 131,98,110,131,
+  165,165,196,165, 165,131,98,131,
+  196,196,261,196, 196,165,131,165,
+  131,110,98,110,  131,165,131,98
+];
+
+let musicPlaying=false, musicStep=0, musicTimeout=null, currentBPM=148;
+
+function musicBeat() {
+  if (!musicPlaying) return;
+  const step = musicStep % MELODY.length;
+  const bd   = 60 / currentBPM;
+  const now  = AC.currentTime;
+
+  // Melody — staccato square wave
+  if (!(step%8===7 && Math.random()<.3)) {
+    const mo=AC.createOscillator(), mg=AC.createGain();
+    mo.connect(mg); mg.connect(musicGain);
+    mo.type='square'; mo.frequency.setValueAtTime(MELODY[step],now);
+    mg.gain.setValueAtTime(.12,now); mg.gain.exponentialRampToValueAtTime(.001,now+bd*.45);
+    mo.start(now); mo.stop(now+bd*.5);
+  }
+
+  // Bass on every 4th step
+  if (step%4===0) {
+    const bo=AC.createOscillator(), bg=AC.createGain();
+    bo.connect(bg); bg.connect(musicGain);
+    bo.type='triangle'; bo.frequency.setValueAtTime(BASS[step],now);
+    bg.gain.setValueAtTime(.22,now); bg.gain.exponentialRampToValueAtTime(.001,now+bd*.9);
+    bo.start(now); bo.stop(now+bd);
+  }
+
+  // Hi-hat every beat
+  const hn=AC.createOscillator(), hg=AC.createGain(), hf=AC.createBiquadFilter();
+  hn.connect(hf); hf.connect(hg); hg.connect(musicGain);
+  hn.type='square'; hn.frequency.value=8000+Math.random()*4000;
+  hf.type='highpass'; hf.frequency.value=7000;
+  hg.gain.setValueAtTime(step%2===0?.04:.02, now);
+  hg.gain.exponentialRampToValueAtTime(.001, now+bd*.15);
+  hn.start(now); hn.stop(now+bd*.2);
+
+  musicStep++;
+  musicTimeout = setTimeout(musicBeat, bd*1000);
+}
+
+function startMusic() { if(musicPlaying)return; musicPlaying=true; musicStep=0; resumeAC(); musicBeat(); }
+function stopMusic()  { musicPlaying=false; if(musicTimeout)clearTimeout(musicTimeout); musicTimeout=null; }
+function setMusicSpeed(lvl) { currentBPM = Math.min(220, 148+(lvl-1)*8); }
+
+// ── CANVAS ─────────────────────────────────────────
+const CANVAS_W = Math.min(540, window.innerWidth * 0.95);
+const CANVAS_H = Math.min(420, window.innerHeight * 0.46);
+const canvas = document.getElementById('gameCanvas');
+canvas.width = CANVAS_W; canvas.height = CANVAS_H;
+const ctx = canvas.getContext('2d');
+
+// ── STATE ──────────────────────────────────────────
+const MAX_LIVES = 5;
+let score, lives, level, items, jayj, keys, animId;
+let spawnTimer, spawnInterval, lastTime, invincible, nextLifeAt;
+let hardcoreMode = false;
+let goodStreak = 0;
+let eatCount = 0;
+
+let highScore = 0;
+try { highScore = parseInt(localStorage.getItem('jayjHi')||'0')||0; } catch(e){}
+
+const CHEESES     = ['🧀','🧀','🧀','🍕','🥐'];
+const VEGGIES     = ['🥦','🥕','🥒','🥬','🧅','🌽','🥑'];
+const CHEESY_MSGS = ['LUSH!','BOSS!','MINT!','LOVELY!','PROPER!','GET IN!'];
+
+function initGame() {
+  score=0; lives=hardcoreMode?1:3; level=1; items=[]; goodStreak=0; eatCount=0;
+  spawnTimer=0; spawnInterval=90; lastTime=0; invincible=0; nextLifeAt=1000;
+  keys={}; joystickVec={x:0,y:0};
+  jayj = { x:CANVAS_W/2, y:CANVAS_H/2, r:22, vx:0, vy:0, speed:3.5, trail:[], wobble:0, happy:0 };
+  updateHUD(); renderLives();
+}
+
+// ── SPAWN ──────────────────────────────────────────
+function spawnItem() {
+  const isVeg = Math.random() < 0.32 + level * 0.02;
+  const emoji = isVeg ? VEGGIES[Math.floor(Math.random()*VEGGIES.length)]
+                      : CHEESES[Math.floor(Math.random()*CHEESES.length)];
+  const edge = Math.floor(Math.random()*4);
+  const spd  = 1.2 + level*0.22 + Math.random()*0.6;
+  let x,y,vx,vy;
+  if      (edge===0){x=Math.random()*CANVAS_W;y=-30;           vx=(Math.random()-.5)*spd;vy=spd;}
+  else if (edge===1){x=CANVAS_W+30;           y=Math.random()*CANVAS_H;vx=-spd;vy=(Math.random()-.5)*spd;}
+  else if (edge===2){x=Math.random()*CANVAS_W;y=CANVAS_H+30;  vx=(Math.random()-.5)*spd;vy=-spd;}
+  else              {x=-30;                   y=Math.random()*CANVAS_H;vx=spd; vy=(Math.random()-.5)*spd;}
+  const isMouldy = !isVeg && !hardcoreMode && emoji === '🧀' && Math.random() < 0.10;
+  items.push({x,y,vx,vy,emoji,isVeg,isMouldy,r:18,spin:Math.random()*Math.PI*2,spinSpeed:(Math.random()-.5)*.09});
+}
+
+// ── POPUP ──────────────────────────────────────────
+function showPopup(txt, x, y, color) {
+  const cr = canvas.getBoundingClientRect();
+  const d  = document.createElement('div');
+  d.className='popup'; d.textContent=txt;
+  d.style.left  = (cr.left+x-20)+'px';
+  d.style.top   = (cr.top +y-24)+'px';
+  d.style.color = color||'#FFD93D';
+  document.body.appendChild(d);
+  setTimeout(()=>d.remove(), 950);
+}
+
+// ── DRAW ───────────────────────────────────────────
+function drawJayJ() {
+  const {x,y,r,wobble,happy} = jayj;
+  const colSkin   = SHOP.colours.find(c=>c.id===activeSkins.colour) || SHOP.colours[0];
+  const effectId  = activeSkins.effect;
+
+  // Trail / effect
+  jayj.trail.forEach((t,i) => {
+    const frac = i/jayj.trail.length;
+    ctx.globalAlpha = frac*.28;
+    ctx.beginPath(); ctx.arc(t.x,t.y,r*frac*.75,0,Math.PI*2);
+    if (effectId==='fire')    ctx.fillStyle = ['#ff4400','#ff8800','#ffcc00'][i%3];
+    else if(effectId==='hearts') ctx.fillStyle = '#ff69b4';
+    else if(effectId==='rainbow') ctx.fillStyle = `hsl(${(i*30+Date.now()*.05)%360},100%,60%)`;
+    else if(effectId==='trail')  ctx.fillStyle = '#ffffaa';
+    else ctx.fillStyle='#c97bff';
+    ctx.fill();
+  });
+  ctx.globalAlpha=1;
+  if (invincible>0 && Math.floor(invincible/5)%2===0) ctx.globalAlpha=.45;
+
+  ctx.save(); ctx.translate(x,y);
+  const wob=Math.sin(wobble)*2; ctx.scale(1+wob*.04,1-wob*.04);
+
+  const charId = activeSkins.char;
+  if (charId !== 'default') {
+    // Emoji characters
+    const charMap = {ghost:'👻',star:'⭐',cheese:'🧀',alien:'👽',robot:'🤖'};
+    ctx.font=`${r*1.8}px serif`; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.shadowColor=colSkin.glow; ctx.shadowBlur=18;
+    ctx.fillText(charMap[charId]||'👾',0,0);
+    ctx.shadowBlur=0;
+  } else {
+    // Normal JayJ ball
+    let c1, c2;
+    if (colSkin.id==='rainbow') {
+      const hue = (Date.now()*0.1)%360;
+      c1=`hsl(${hue},100%,75%)`; c2=`hsl(${(hue+120)%360},100%,40%)`;
+    } else {
+      c1 = happy>0?'#ffe066':colSkin.colours[0];
+      c2 = happy>0?'#ff9f00':colSkin.colours[1];
+    }
+    const grd=ctx.createRadialGradient(-r*.3,-r*.3,r*.1,0,0,r);
+    grd.addColorStop(0,c1); grd.addColorStop(1,c2);
+    ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2);
+    ctx.fillStyle=grd;
+    ctx.shadowColor=happy>0?'#ffcc00':colSkin.glow;
+    ctx.shadowBlur=18; ctx.fill(); ctx.shadowBlur=0;
+
+    // Face
+    const ey=happy>0?-2:0;
+    ctx.fillStyle='#fff';
+    ctx.beginPath();ctx.arc(-8,-5+ey,5,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(8,-5+ey,5,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#1a0a2e';
+    ctx.beginPath();ctx.arc(-7,-4+ey,3,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(9,-4+ey,3,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#fff';
+    ctx.beginPath();ctx.arc(-6,-6+ey,1.2,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(10,-6+ey,1.2,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='#1a0a2e'; ctx.lineWidth=2.5; ctx.lineCap='round';
+    ctx.beginPath();
+    happy>0?ctx.arc(0,3,9,.2,Math.PI-.2):ctx.arc(0,8,6,Math.PI+.3,-.3);
+    ctx.stroke();
+  }
+
+  // Hat
+  const hatId = activeSkins.hat;
+  if (hatId && hatId !== 'none') {
+    const hatMap = {cap:'🧢',crown:'👑',tophat:'🎩',cowboy:'🤠',party:'🎉',halo:'😇'};
+    ctx.font=`${r*1.2}px serif`; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(hatMap[hatId]||'🧢', 0, -r-6);
+  } else if (hatId === 'cap' || activeSkins.hat === 'cap' || (!hatId && activeSkins.char==='default')) {
+    // Default BCF cap
+    ctx.fillStyle='#1a0a2e'; ctx.fillRect(-14,-r-6,28,8);
+    ctx.fillStyle='#ff6b35';  ctx.fillRect(-10,-r-14,20,10);
+    ctx.fillStyle='#ffd93d';  ctx.font='bold 7px Nunito'; ctx.fillText('BCF',-8,-r-6);
+  }
+
+  ctx.restore(); ctx.globalAlpha=1;
+}
+
+function drawItem(it) {
+  ctx.save(); ctx.translate(it.x,it.y); ctx.rotate(it.spin);
+  ctx.font=`${it.r*1.8}px serif`; ctx.textAlign='center'; ctx.textBaseline='middle';
+  if (it.isMouldy) {
+    ctx.shadowColor='#39ff14'; ctx.shadowBlur=18;
+    ctx.globalAlpha=0.85 + Math.sin(Date.now()*0.008)*0.15;
+  } else {
+    ctx.shadowColor=it.isVeg?'#6bcb77':'#ffd93d'; ctx.shadowBlur=it.isVeg?8:14;
+  }
+  ctx.fillText(it.emoji,0,0);
+  ctx.shadowBlur=0; ctx.restore();
+}
+
+function draw() {
+  ctx.clearRect(0,0,CANVAS_W,CANVAS_H);
+  ctx.strokeStyle='rgba(74,45,138,.18)'; ctx.lineWidth=1;
+  for(let x=0;x<CANVAS_W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,CANVAS_H);ctx.stroke();}
+  for(let y=0;y<CANVAS_H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(CANVAS_W,y);ctx.stroke();}
+  items.forEach(drawItem); drawJayJ();
+}
+
+// ── UPDATE ─────────────────────────────────────────
+function update(dt=1) {
+  let mvx=0, mvy=0;
+  if(keys['ArrowLeft'] ||keys['a']||keys['A']) mvx-=1;
+  if(keys['ArrowRight']||keys['d']||keys['D']) mvx+=1;
+  if(keys['ArrowUp']   ||keys['w']||keys['W']) mvy-=1;
+  if(keys['ArrowDown'] ||keys['s']||keys['S']) mvy+=1;
+  if(Math.abs(joystickVec.x)>.05||Math.abs(joystickVec.y)>.05){mvx+=joystickVec.x;mvy+=joystickVec.y;}
+  if(mobileDir.left)  mvx-=1;
+  if(mobileDir.right) mvx+=1;
+  if(mobileDir.up)    mvy-=1;
+  if(mobileDir.down)  mvy+=1;
+  const mag=Math.sqrt(mvx*mvx+mvy*mvy);
+  if(mag>0){mvx/=mag;mvy/=mag;}
+  jayj.vx=mvx*jayj.speed; jayj.vy=mvy*jayj.speed;
+  jayj.x=Math.max(jayj.r,Math.min(CANVAS_W-jayj.r,jayj.x+jayj.vx*dt));
+  jayj.y=Math.max(jayj.r,Math.min(CANVAS_H-jayj.r,jayj.y+jayj.vy*dt));
+
+  jayj.trail.push({x:jayj.x,y:jayj.y});
+  if(jayj.trail.length>12) jayj.trail.shift();
+  jayj.wobble+=.2*dt;
+  if(jayj.happy>0) jayj.happy-=dt;
+  if(invincible>0) invincible-=dt;
+
+  spawnTimer+=dt;
+  if(spawnTimer>=spawnInterval){
+    spawnItem(); spawnTimer=0;
+    spawnInterval=Math.max(28,spawnInterval-.8);
+  }
+
+  for(let i=items.length-1;i>=0;i--){
+    const it=items[i];
+    it.x+=it.vx*dt; it.y+=it.vy*dt; it.spin+=it.spinSpeed*dt;
+    if(it.x<-60||it.x>CANVAS_W+60||it.y<-60||it.y>CANVAS_H+60){items.splice(i,1);continue;}
+    const dx=jayj.x-it.x, dy=jayj.y-it.y;
+    if(Math.sqrt(dx*dx+dy*dy)<jayj.r+it.r-4){
+      items.splice(i,1);
+      if(!it.isVeg){
+        const pts=10*level; score+=pts;
+        coins += level; // earn coins per eat
+        saveShop(); updateShopCoins();
+        jayj.happy=45; sfx.cheese();
+
+        if(it.isMouldy){
+          jayj.r = Math.min(jayj.r + 3, 48);
+          showPopup('🤢 MOULDY CHEESE!', jayj.x, jayj.y-20, '#39ff14');
+        } else {
+          goodStreak++;
+          if(goodStreak % 10 === 0){
+            jayj.r = Math.max(22, jayj.r - 3);
+            showPopup('💪 SLIM MODE! -SIZE',jayj.x,jayj.y-40,'#c9a0ff');
+          }
+          showPopup(`+${pts} ${CHEESY_MSGS[Math.floor(Math.random()*CHEESY_MSGS.length)]}`,jayj.x,jayj.y-20,'#FFD93D');
+        }
+
+        // Extra life every 1000 pts
+        if(score>=nextLifeAt){
+          nextLifeAt+=1000;
+          if(lives<MAX_LIVES){
+            lives++; sfx.extraLife();
+            showPopup('❤️ EXTRA LIFE!',jayj.x,jayj.y-58,'#FF4560');
+            renderLives(true); flashHUD();
+          }
+        }
+
+        // Level up every 5 eats
+        eatCount++;
+        if(eatCount % 5 === 0){ level++; sfx.levelUp(); setMusicSpeed(level); showPopup('LEVEL UP! 🏙️',jayj.x,jayj.y-50,'#c9a0ff'); }
+
+      } else if(invincible<=0){
+        lives--; invincible=90; sfx.veggie();
+        goodStreak = 0;
+        jayj.r = Math.min(jayj.r + 4, 55);
+        showPopup('🤮 GROSS! YOU GOT BIGGER!',jayj.x,jayj.y-20,'#FF4560');
+        renderLives();
+        if(lives<=0){endGame();return;}
+      }
+      updateHUD();
+    }
+  }
+}
+
+// ── HUD ────────────────────────────────────────────
+function updateHUD(){
+  document.getElementById('score-display').textContent=score;
+  document.getElementById('level-badge').textContent=`LVL ${level}`;
+  if(score>highScore){ highScore=score; try{localStorage.setItem('jayjHi',highScore);}catch(e){} acctSaveProgress(); }
+  document.getElementById('hi-display').textContent=highScore;
+}
+function renderLives(gained=false){
+  const el=document.getElementById('lives-display'); el.innerHTML='';
+  for(let i=0;i<MAX_LIVES;i++){
+    const d=document.createElement('div');
+    d.className='life'+(i>=lives?' lost':'')+(gained&&i===lives-1?' gained':'');
+    el.appendChild(d);
+  }
+}
+function flashHUD(){
+  const h=document.getElementById('hud');
+  h.classList.remove('life-flash'); void h.offsetWidth; h.classList.add('life-flash');
+  setTimeout(()=>h.classList.remove('life-flash'),500);
+}
+
+// ── SUPABASE LEADERBOARD ───────────────────────────
+const SB_URL = 'https://abrkhsgcthvynwlflbgr.supabase.co';
+const SB_KEY = 'sb_publishable_TlvAUC4uEWQxJv_VRZuY_A_xUjkmYtN';
+
+async function sbFetch(path, opts={}) {
+  const headers = {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer ' + SB_KEY,
+    'apikey': SB_KEY,
+    ...opts.headers
+  };
+  delete opts.headers;
+  const res = await fetch(SB_URL + path, { headers, ...opts });
+  return res;
+}
+
+async function fetchLeaderboard(highlightName='', table='normal') {
+  const el = document.getElementById('lb-rows');
+  el.innerHTML = 'Loading...';
+  const endpoint = table === 'hardcore' ? 'scores_hardcore' : 'scores';
+  try {
+    const res  = await sbFetch(`/rest/v1/${endpoint}?select=name,score&order=score.desc&limit=10`);
+    const rows = await res.json();
+    if (!Array.isArray(rows) || rows.length === 0) { el.innerHTML='<div style="color:#c9a0ff;text-align:center;font-size:.85rem">No scores yet — be the first!</div>'; return; }
+    const medals = ['🥇','🥈','🥉'];
+    el.innerHTML = rows.map((r,i) => {
+      const isMe = r.name === highlightName;
+      return `<div class="lb-row${isMe?' lb-me':''}">
+        <span class="lb-rank">${medals[i]||'#'+(i+1)}</span>
+        <span class="lb-name">${r.name.replace(/</g,'&lt;')}</span>
+        <span class="lb-score">${r.score}</span>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    el.innerHTML = '<div style="color:#c9a0ff;text-align:center;font-size:.85rem">Couldn\'t load scores 😬</div>';
+  }
+}
+
+let currentTab = 'normal';
+function switchTab(tab) {
+  currentTab = tab;
+  const isHard = tab === 'hardcore';
+  document.getElementById('lb-tab-normal').style.background   = isHard ? 'var(--panel)' : 'var(--yellow)';
+  document.getElementById('lb-tab-normal').style.color        = isHard ? '#c9a0ff' : '#1a0a2e';
+  document.getElementById('lb-tab-hardcore').style.background = isHard ? 'var(--red)' : 'var(--panel)';
+  document.getElementById('lb-tab-hardcore').style.color      = isHard ? '#fff' : '#c9a0ff';
+  fetchLeaderboard('', tab);
+}
+
+// ── PROFANITY FILTER ───────────────────────────────
+const BAD_WORDS = [
+  'fuck','shit','cunt','dick','cock','ass','arse','bitch','bastard','piss',
+  'wank','twat','slag','whore','slut','nigger','nigga','faggot','fag','retard',
+  'rape','pedo','nonce','spaz','chink','kike','spic','wetback','tranny',
+  'bollocks','bellend','prick','knob','tosser','wanker','shag','fanny',
+  'minge','tit','tits','boob','boobs','pussy','vagina','penis','anus',
+  'cum','jizz','spunk','dildo','anal','porn','sex','nude','naked',
+  'kill','murder','nazi','hitler','terror'
+];
+function containsBadWord(str) {
+  const clean = str.toLowerCase().replace(/[^a-z0-9]/g,'');
+  return BAD_WORDS.some(w => clean.includes(w));
+}
+
+async function submitScore(name, score) {
+  const status = document.getElementById('lb-status');
+  status.textContent = 'Submitting...';
+  const table = hardcoreMode ? 'scores_hardcore' : 'scores';
+  try {
+    const res = await sbFetch(`/rest/v1/${table}`, {
+      method: 'POST',
+      headers: { 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ name: name.trim(), score })
+    });
+    if (res.ok) {
+      status.textContent = '✅ Score submitted!';
+      document.getElementById('submit-btn').disabled = true;
+      document.getElementById('name-input').disabled = true;
+      fetchLeaderboard(name.trim(), hardcoreMode ? 'hardcore' : 'normal');
+    } else {
+      const err = await res.json().catch(()=>({}));
+      status.textContent = `❌ Error ${res.status}: ${err.message || err.hint || 'check Supabase RLS policies'}`;
+    }
+  } catch(e) {
+    status.textContent = '❌ No connection: ' + e.message;
+  }
+}
+
+// ── ACCOUNT SYSTEM ─────────────────────────────────
+let loggedInUser = null; // { id, username }
+
+async function hashPassword(pass) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pass));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+let acctMode = 'login';
+
+function acctTab(tab) {
+  acctMode = tab;
+  const isLogin = tab === 'login';
+  document.getElementById('acct-tab-login').style.background = isLogin ? '' : '#2a1a5e';
+  document.getElementById('acct-tab-login').style.borderColor = isLogin ? '' : '#c9a0ff';
+  document.getElementById('acct-tab-login').style.color = isLogin ? '' : '#c9a0ff';
+  document.getElementById('acct-tab-signup').style.background = !isLogin ? '' : '#2a1a5e';
+  document.getElementById('acct-tab-signup').style.borderColor = !isLogin ? '' : '#c9a0ff';
+  document.getElementById('acct-tab-signup').style.color = !isLogin ? '' : '#c9a0ff';
+  document.getElementById('acct-submit-btn').textContent = isLogin ? 'Log In' : 'Sign Up';
+  document.getElementById('acct-status').textContent = '';
+  document.getElementById('acct-tab-login').dataset.active = isLogin ? '1' : '';
+}
+
+async function acctSubmit() {
+  const username = document.getElementById('acct-user').value.trim();
+  const password = document.getElementById('acct-pass').value;
+  const status = document.getElementById('acct-status');
+  const isLogin = acctMode === 'login';
+
+  if (!username || !password) { status.textContent = '❌ Fill in both fields!'; return; }
+  if (username.length < 3) { status.textContent = '❌ Username must be 3+ characters!'; return; }
+  if (password.length < 4) { status.textContent = '❌ Password must be 4+ characters!'; return; }
+  if (containsBadWord(username)) { status.textContent = '❌ Choose a cleaner name bab!'; return; }
+
+  status.textContent = '⏳ Please wait...';
+  document.getElementById('acct-submit-btn').disabled = true;
+
+  try {
+    const hash = await hashPassword(password);
+
+    if (isLogin) {
+      // Log in — fetch account
+      const res = await sbFetch(`/rest/v1/user_accounts?username=eq.${encodeURIComponent(username)}&select=*`);
+      const data = await res.json();
+      if (!data.length) { status.textContent = '❌ Username not found!'; document.getElementById('acct-submit-btn').disabled=false; return; }
+      const acct = data[0];
+      if (acct.password_hash !== hash) { status.textContent = '❌ Wrong password!'; document.getElementById('acct-submit-btn').disabled=false; return; }
+      // Load their data
+      loggedInUser = { id: acct.id, username: acct.username };
+      coins = acct.coins || 0;
+      highScore = acct.high_score || 0;
+      try { ownedSkins = typeof acct.owned_skins === 'object' ? acct.owned_skins : JSON.parse(acct.owned_skins || '{}'); } catch(e){ ownedSkins={}; }
+      try { activeSkins = typeof acct.active_skins === 'object' ? acct.active_skins : JSON.parse(acct.active_skins || JSON.stringify(activeSkins)); } catch(e){}
+      // Also update localStorage as fallback
+      try { localStorage.setItem('jayjCoins', coins); localStorage.setItem('jayjOwned', JSON.stringify(ownedSkins)); localStorage.setItem('jayjActive', JSON.stringify(activeSkins)); localStorage.setItem('jayjHi', highScore); } catch(e){}
+      acctOnLogin();
+    } else {
+      // Sign up — check username not taken
+      const check = await sbFetch(`/rest/v1/user_accounts?username=eq.${encodeURIComponent(username)}&select=id`);
+      const existing = await check.json();
+      if (existing.length) { status.textContent = '❌ Username already taken!'; document.getElementById('acct-submit-btn').disabled=false; return; }
+      // Create account with current local progress
+      const res = await sbFetch('/rest/v1/user_accounts', {
+        method: 'POST',
+        headers: { 'Prefer': 'return=representation' },
+        body: JSON.stringify({
+          username,
+          password_hash: hash,
+          coins,
+          high_score: highScore,
+          owned_skins: ownedSkins,
+          active_skins: activeSkins
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) { status.textContent = '❌ Error: ' + (data.message || data.hint || 'Try again'); document.getElementById('acct-submit-btn').disabled=false; return; }
+      loggedInUser = { id: data[0].id, username: data[0].username };
+      acctOnLogin();
+    }
+  } catch(e) {
+    status.textContent = '❌ Connection error: ' + e.message;
+    document.getElementById('acct-submit-btn').disabled = false;
+  }
+}
+
+function acctOnLogin() {
+  document.getElementById('acct-submit-btn').disabled = false;
+  document.getElementById('acct-status').textContent = '';
+  try { localStorage.setItem('jayjAcctUser', loggedInUser.username); localStorage.setItem('jayjAcctId', loggedInUser.id); } catch(e){}
+  updateAcctMenuUI();
+  showScreen('screen-start');
+}
+
+function acctLogout() {
+  loggedInUser = null;
+  try { localStorage.removeItem('jayjAcctUser'); localStorage.removeItem('jayjAcctId'); } catch(e){}
+  updateAcctMenuUI();
+}
+
+function updateAcctMenuUI() {
+  const loggedIn = !!loggedInUser;
+  document.getElementById('acct-open-btn').style.display = loggedIn ? 'none' : '';
+  const bar = document.getElementById('acct-loggedin-bar');
+  bar.style.display = loggedIn ? 'flex' : 'none';
+  if (loggedIn) document.getElementById('acct-loggedin-name').textContent = loggedInUser.username;
+  document.getElementById('acct-guest-warn').style.display = loggedIn ? 'none' : 'block';
+}
+
+async function acctSaveProgress() {
+  if (!loggedInUser) return;
+  try {
+    await sbFetch(`/rest/v1/user_accounts?id=eq.${loggedInUser.id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ coins, high_score: highScore, owned_skins: ownedSkins, active_skins: activeSkins })
+    });
+  } catch(e) { console.warn('Account save failed:', e); }
+}
+
+// Try auto-login from localStorage on load
+(async function autoLogin() {
+  try {
+    const savedUser = localStorage.getItem('jayjAcctUser');
+    const savedId = localStorage.getItem('jayjAcctId');
+    if (!savedUser || !savedId) return;
+    const res = await sbFetch(`/rest/v1/user_accounts?id=eq.${savedId}&select=*`);
+    const data = await res.json();
+    if (!data.length) return;
+    const acct = data[0];
+    if (acct.username !== savedUser) return;
+    loggedInUser = { id: acct.id, username: acct.username };
+    coins = acct.coins || 0;
+    highScore = acct.high_score || 0;
+    try { ownedSkins = typeof acct.owned_skins === 'object' ? acct.owned_skins : JSON.parse(acct.owned_skins || '{}'); } catch(e){ ownedSkins={}; }
+    try { activeSkins = typeof acct.active_skins === 'object' ? acct.active_skins : JSON.parse(acct.active_skins || JSON.stringify(activeSkins)); } catch(e){}
+    try { localStorage.setItem('jayjCoins', coins); localStorage.setItem('jayjOwned', JSON.stringify(ownedSkins)); localStorage.setItem('jayjActive', JSON.stringify(activeSkins)); localStorage.setItem('jayjHi', highScore); } catch(e){}
+    updateAcctMenuUI();
+    document.getElementById('hi-display').textContent = highScore;
+  } catch(e) { console.warn('Auto-login failed:', e); }
+})();
+
+
+let running=false;
+let lastFrameTime=0;
+function loop(ts){
+  if(!running)return;
+  const dt = Math.min((ts - lastFrameTime) / (1000/60), 3); // delta, capped at 3x to avoid huge jumps
+  lastFrameTime=ts;
+  update(dt); draw();
+  animId=requestAnimationFrame(loop);
+}
+
+const SCREENS = ['screen-start','screen-game','screen-gameover','screen-shop','screen-leaderboard','screen-race','screen-race-result','screen-race-waiting','screen-account'];
+function showScreen(id) {
+  SCREENS.forEach(s => {
+    const el = document.getElementById(s);
+    el.style.display = s === id ? 'flex' : 'none';
+  });
+}
+
+function togglePlayModes() {
+  const modes = document.getElementById('play-modes');
+  const btn = document.getElementById('play-btn');
+  const open = modes.style.display === 'flex';
+  modes.style.display = open ? 'none' : 'flex';
+  btn.textContent = open ? '🎮 PLAY' : '✖ CLOSE';
+}
+
+function goToMenu(){
+  running=false; cancelAnimationFrame(animId);
+  stopMusic(); showScreen('screen-start');
+  document.getElementById('play-modes').style.display = 'none';
+  document.getElementById('play-btn').textContent = '🎮 PLAY';
+}
+function startGame(){
+  resumeAC();
+  showScreen('screen-game');
+  document.getElementById('hardcore-badge').style.display = hardcoreMode ? 'inline-block' : 'none';
+  applyControlMode();
+  initGame(); running=true; lastFrameTime=performance.now(); animId=requestAnimationFrame(loop);
+  stopMusic(); startMusic();
+}
+function endGame(){
+  running=false; cancelAnimationFrame(animId);
+  stopMusic(); sfx.gameOver();
+
+  // If in race mode, show waiting screen instead of game over
+  if (raceMode) {
+    racePlayerDied();
+    return;
+  }
+
+  showScreen('screen-gameover');
+  document.getElementById('final-score').textContent=`Score: ${score}`;
+  document.getElementById('final-hi').textContent=`Best: ${highScore}`;
+  // Save coins earned during game
+  try { localStorage.setItem('jayjCoins', coins); } catch(e){}
+  acctSaveProgress();
+  const msgs=['😬 The veggies got ya... eat more cheese!','🧀 Not bad at all!','👏 Proper good effort, bab!','🏆 Absolute LEGEND from Brum!'];
+  document.getElementById('final-msg').textContent = score>=1000?msgs[3]:score>=500?msgs[2]:score>=200?msgs[1]:msgs[0];
+  const inp = document.getElementById('name-input');
+  const btn = document.getElementById('submit-btn');
+  inp.disabled = false; btn.disabled = false;
+  document.getElementById('lb-status').textContent = '';
+  try { const saved = localStorage.getItem('jayjName'); if(saved) inp.value = saved; } catch(e){}
+  switchTab(hardcoreMode ? 'hardcore' : 'normal');
+}
+
+// ── CONTROL MODE ───────────────────────────────────
+// modes: 'keyboard', 'joystick', 'dpad'
+let controlMode = 'keyboard';
+try { controlMode = localStorage.getItem('jayjCtrl') || 'keyboard'; } catch(e){}
+
+// Auto joystick on mobile/touch devices
+if (window.matchMedia('(pointer:coarse)').matches) {
+  try { if (!localStorage.getItem('jayjCtrl')) controlMode = 'joystick'; } catch(e) { controlMode = 'joystick'; }
+}
+
+function applyControlMode() {
+  document.body.classList.remove('show-joystick','show-dpad','touch-mode');
+  if (controlMode === 'joystick') { document.body.classList.add('show-joystick','touch-mode'); }
+  else if (controlMode === 'dpad') { document.body.classList.add('show-dpad'); }
+  const labels = { keyboard:'⌨️ Keyboard', joystick:'🕹️ Joystick', dpad:'🎮 D-Pad' };
+  const btn = document.getElementById('ctrl-menu-btn');
+  if (btn) btn.textContent = labels[controlMode];
+  try { localStorage.setItem('jayjCtrl', controlMode); } catch(e){}
+}
+
+function cycleControls() {
+  const order = ['keyboard','joystick','dpad'];
+  controlMode = order[(order.indexOf(controlMode)+1) % order.length];
+  applyControlMode();
+  resetKnob();
+}
+
+// ── KEYBOARD ───────────────────────────────────────
+let keyboardDetected=false, touchModeActive=false;
+function enableTouch(){ touchModeActive=true; }
+function disableTouch(){ keyboardDetected=true; touchModeActive=false; }
+
+let cheatBuffer = '';
+window.addEventListener('keydown',e=>{
+  disableTouch(); keys[e.key]=true;
+  if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown',' '].includes(e.key)) e.preventDefault();
+  if(running){
+    cheatBuffer += e.key; cheatBuffer = cheatBuffer.slice(-6);
+    if(cheatBuffer === 'uiop00') { cheatBuffer=''; endGame(); }
+  }
+});
+window.addEventListener('keyup',e=>keys[e.key]=false);
+window.addEventListener('touchstart',()=>enableTouch(),{passive:true,once:true});
+if(window.matchMedia('(pointer:coarse)').matches) enableTouch();
+
+// ── JOYSTICK ───────────────────────────────────────
+let joystickVec={x:0,y:0}, joyTouchId=null;
+const JOY_R = 47;
+const wrap  = document.getElementById('joystick-wrap');
+const knob  = document.getElementById('joystick-knob');
+
+function resetKnob(){
+  knob.style.left=(wrap.offsetWidth /2 - knob.offsetWidth /2)+'px';
+  knob.style.top =(wrap.offsetHeight/2 - knob.offsetHeight/2)+'px';
+}
+function setKnob(nx,ny){
+  const max=(wrap.offsetWidth/2)-(knob.offsetWidth/2)-4;
+  knob.style.left=(wrap.offsetWidth /2+nx*max-knob.offsetWidth /2)+'px';
+  knob.style.top =(wrap.offsetHeight/2+ny*max-knob.offsetHeight/2)+'px';
+}
+
+let joyOrigin={x:0,y:0};
+function handleJoyStart(cx, cy) {
+  joyOrigin={x:cx, y:cy};
+}
+function handleJoyMove(cx, cy) {
+  let dx=cx-joyOrigin.x, dy=cy-joyOrigin.y;
+  const dist=Math.sqrt(dx*dx+dy*dy);
+  if(dist>JOY_R){dx*=JOY_R/dist;dy*=JOY_R/dist;}
+  joystickVec={x:dx/JOY_R, y:dy/JOY_R};
+  setKnob(joystickVec.x, joystickVec.y);
+}
+function handleJoyEnd() { joystickVec={x:0,y:0}; resetKnob(); }
+
+wrap.addEventListener('touchstart',e=>{
+  if(controlMode!=='joystick')return; e.preventDefault();
+  const t=e.changedTouches[0]; joyTouchId=t.identifier;
+  const r=wrap.getBoundingClientRect();
+  handleJoyStart(t.clientX-r.left, t.clientY-r.top);
+},{passive:false});
+wrap.addEventListener('touchmove',e=>{
+  if(controlMode!=='joystick')return; e.preventDefault();
+  for(const t of e.changedTouches){
+    if(t.identifier!==joyTouchId)continue;
+    const r=wrap.getBoundingClientRect();
+    handleJoyMove(t.clientX-r.left, t.clientY-r.top);
+  }
+},{passive:false});
+wrap.addEventListener('mousedown',e=>{
+  if(controlMode!=='joystick')return;
+  const r=wrap.getBoundingClientRect();
+  handleJoyStart(e.clientX-r.left, e.clientY-r.top);
+  const onMove = ev => { const r2=wrap.getBoundingClientRect(); handleJoyMove(ev.clientX-r2.left, ev.clientY-r2.top); };
+  const onUp   = () => { handleJoyEnd(); window.removeEventListener('mousemove',onMove); window.removeEventListener('mouseup',onUp); };
+  window.addEventListener('mousemove',onMove); window.addEventListener('mouseup',onUp);
+});
+function joyRelease(){joyTouchId=null;handleJoyEnd();}
+wrap.addEventListener('touchend',   e=>{e.preventDefault();joyRelease();},{passive:false});
+wrap.addEventListener('touchcancel',e=>{e.preventDefault();joyRelease();},{passive:false});
+
+// ── DPAD ───────────────────────────────────────────
+const mobileDir={left:false,right:false,up:false,down:false};
+
+function bindDpadBtn(id, dir) {
+  const btn = document.getElementById(id);
+  const press   = e => { e.preventDefault(); mobileDir[dir]=true;  btn.classList.add('pressed'); };
+  const release = e => { e.preventDefault(); mobileDir[dir]=false; btn.classList.remove('pressed'); };
+  btn.addEventListener('touchstart',  press,   {passive:false});
+  btn.addEventListener('touchend',    release, {passive:false});
+  btn.addEventListener('touchcancel', release, {passive:false});
+  btn.addEventListener('mousedown',   press);
+  btn.addEventListener('mouseup',     release);
+  btn.addEventListener('mouseleave',  release);
+}
+bindDpadBtn('btn-left','left');
+bindDpadBtn('btn-right','right');
+bindDpadBtn('btn-up','up');
+bindDpadBtn('btn-down','down');
+
+// ── SHOP ───────────────────────────────────────────
+let coins = 0;
+let ownedSkins = {};
+let activeSkins = { colour:'default', hat:'none', char:'default', effect:'none' };
+try { coins = parseInt(localStorage.getItem('jayjCoins')||'0')||0; } catch(e){}
+try { ownedSkins  = JSON.parse(localStorage.getItem('jayjOwned') ||'{}'); } catch(e){}
+try { activeSkins = JSON.parse(localStorage.getItem('jayjActive')||JSON.stringify(activeSkins)); } catch(e){}
+
+const SHOP = {
+  colours: [
+    { id:'default', name:'Classic',    price:0,    preview:'🟣', colours:['#d580ff','#6a00cc'], glow:'#9b30ff' },
+    { id:'red',     name:'Fire Red',   price:80,   preview:'🔴', colours:['#ff6060','#cc0000'], glow:'#ff3030' },
+    { id:'blue',    name:'Ocean Blue', price:80,   preview:'🔵', colours:['#60b0ff','#0055cc'], glow:'#3090ff' },
+    { id:'green',   name:'Toxic',      price:100,  preview:'🟢', colours:['#60ff90','#00aa44'], glow:'#39ff14' },
+    { id:'gold',    name:'Gold',       price:200,  preview:'🟡', colours:['#ffe066','#cc8800'], glow:'#ffcc00' },
+    { id:'black',   name:'Shadow',     price:300,  preview:'⚫', colours:['#555555','#111111'], glow:'#888888' },
+    { id:'rainbow', name:'Rainbow',    price:500,  preview:'🌈', colours:null, glow:'#ff00ff' },
+  ],
+  hats: [
+    { id:'none',     name:'No Hat',    price:0,   preview:'❌' },
+    { id:'cap',      name:'BCF Cap',   price:0,   preview:'🧢' },
+    { id:'crown',    name:'Crown',     price:150, preview:'👑' },
+    { id:'tophat',   name:'Top Hat',   price:150, preview:'🎩' },
+    { id:'cowboy',   name:'Cowboy',    price:200, preview:'🤠' },
+    { id:'party',    name:'Party Hat', price:100, preview:'🎉' },
+    { id:'halo',     name:'Halo',      price:400, preview:'😇' },
+  ],
+  chars: [
+    { id:'default', name:'JayJ',      price:0,   preview:'🟣' },
+    { id:'ghost',   name:'Ghost',     price:200, preview:'👻' },
+    { id:'star',    name:'Star',      price:250, preview:'⭐' },
+    { id:'cheese',  name:'Cheeseball',price:300, preview:'🧀' },
+    { id:'alien',   name:'Alien',     price:400, preview:'👽' },
+    { id:'robot',   name:'Robot',     price:500, preview:'🤖' },
+  ],
+  effects: [
+    { id:'none',     name:'None',      price:0,   preview:'❌' },
+    { id:'trail',    name:'Star Trail',price:150, preview:'⭐' },
+    { id:'fire',     name:'Fire Trail',price:200, preview:'🔥' },
+    { id:'hearts',   name:'Hearts',    price:200, preview:'💖' },
+    { id:'rainbow',  name:'Rainbow',   price:400, preview:'🌈' },
+  ]
+};
+
+function saveShop() {
+  try {
+    localStorage.setItem('jayjCoins',   coins);
+    localStorage.setItem('jayjOwned',   JSON.stringify(ownedSkins));
+    localStorage.setItem('jayjActive',  JSON.stringify(activeSkins));
+    acctSaveProgress();
+  } catch(e){}
+}
+
+function isOwned(id) { return id === 'default' || id === 'none' || id === 'cap' || ownedSkins[id]; }
+
+let currentShopTab = 'colours';
+function shopTab(tab) {
+  currentShopTab = tab;
+  document.querySelectorAll('.shop-tab').forEach((b,i) => {
+    b.classList.toggle('active', ['colours','hats','chars','effects'][i] === tab);
+  });
+  renderShopGrid();
+}
+
+function renderShopGrid() {
+  const grid = document.getElementById('shop-grid');
+  const items = SHOP[currentShopTab];
+  const catKey = {colours:'colour', hats:'hat', chars:'char', effects:'effect'}[currentShopTab];
+  grid.innerHTML = items.map(item => {
+    const owned    = isOwned(item.id);
+    const equipped = activeSkins[catKey] === item.id;
+    return `<div class="shop-item ${owned?'owned':''} ${equipped?'active-skin':''}"
+      onclick="shopClick('${currentShopTab}','${item.id}')">
+      <div class="shop-preview">${item.preview}</div>
+      <div class="shop-name">${item.name}</div>
+      <div class="shop-price ${owned?'owned':''}">${equipped?'✅ ON':owned?'✔ owned':'🪙'+item.price}</div>
+    </div>`;
+  }).join('');
+}
+
+function shopConfirm(message, onConfirm) {
+  const modal = document.getElementById('buy-modal');
+  document.getElementById('buy-modal-text').textContent = message;
+  modal.style.display = 'flex';
+  const confirmBtn = document.getElementById('buy-confirm-btn');
+  const cancelBtn  = document.getElementById('buy-cancel-btn');
+  const close = () => { modal.style.display = 'none'; confirmBtn.onclick = null; cancelBtn.onclick = null; };
+  confirmBtn.onclick = () => { close(); onConfirm(); };
+  cancelBtn.onclick  = () => close();
+}
+
+function shopClick(tab, id) {
+  const item   = SHOP[tab].find(i => i.id === id);
+  const catKey = {colours:'colour', hats:'hat', chars:'char', effects:'effect'}[tab];
+  if (!item) return;
+  if (isOwned(id)) {
+    activeSkins[catKey] = id;
+    saveShop(); renderShopGrid(); return;
+  }
+  if (coins >= item.price) {
+    shopConfirm(`Buy ${item.name} for 🪙${item.price} coins?`, () => {
+      coins -= item.price;
+      ownedSkins[id] = true;
+      activeSkins[catKey] = id;
+      saveShop(); updateShopCoins(); renderShopGrid();
+    });
+  } else {
+    const grid = document.getElementById('shop-grid');
+    const el = grid.querySelectorAll('.shop-item')[SHOP[tab].findIndex(i=>i.id===id)];
+    if (el) { el.style.borderColor='#ff4560'; setTimeout(()=>el.style.borderColor='',600); }
+  }
+}
+
+function updateShopCoins() {
+  document.getElementById('shop-coins').textContent = `🪙 ${coins} coins`;
+}
+
+function openLeaderboard() {
+  showScreen('screen-leaderboard');
+  menuLbTab('normal');
+}
+function closeLeaderboard() {
+  showScreen('screen-start');
+}
+async function menuLbTab(tab) {
+  const isHard = tab === 'hardcore';
+  document.getElementById('menu-lb-tab-normal').classList.toggle('active', !isHard);
+  document.getElementById('menu-lb-tab-hardcore').classList.toggle('active', isHard);
+  const el = document.getElementById('menu-lb-rows');
+  el.innerHTML = 'Loading...';
+  const endpoint = isHard ? 'scores_hardcore' : 'scores';
+  try {
+    const res  = await sbFetch(`/rest/v1/${endpoint}?select=name,score&order=score.desc&limit=10`);
+    const rows = await res.json();
+    if (!Array.isArray(rows)||rows.length===0){ el.innerHTML='<div style="color:#c9a0ff;text-align:center;font-size:.85rem">No scores yet!</div>'; return; }
+    const medals=['🥇','🥈','🥉'];
+    el.innerHTML = rows.map((r,i)=>`<div class="lb-row">
+      <span class="lb-rank">${medals[i]||'#'+(i+1)}</span>
+      <span class="lb-name">${r.name.replace(/</g,'&lt;')}</span>
+      <span class="lb-score">${r.score}</span>
+    </div>`).join('');
+  } catch(e){ el.innerHTML='<div style="color:#c9a0ff;text-align:center">Couldn\'t load 😬</div>'; }
+}
+
+function openShop() {
+  showScreen('screen-shop');
+  updateShopCoins(); shopTab('colours');
+}
+function closeShop() {
+  showScreen('screen-start');
+}
+
+// ── RACE MODE ──────────────────────────────────────
+let raceRoom = null;
+let raceRole = null; // 'host','p2','p3','p4'
+let raceName = '';
+let raceDuration = 60;
+let raceTimer = 0;
+let raceInterval = null;
+let raceScoreInterval = null;
+let raceRealtimeSub = null;
+let raceMyScore = 0;
+let raceMode = false;
+
+const PLAYER_COLORS = ['#FFD93D','#c9a0ff','#39ff14','#FF4560'];
+const PLAYER_ICONS  = ['🏠','👤','👤','👤'];
+
+function myNameField()  { return raceRole === 'host' ? 'host_name'  : `p${raceRole.slice(1)}_name`;  }
+function myScoreField() { return raceRole === 'host' ? 'host_score' : `p${raceRole.slice(1)}_score`; }
+
+function getPlayers(room) {
+  return [
+    { name: room.host_name,  score: room.host_score  || 0, slot: 'host' },
+    { name: room.p2_name,    score: room.p2_score     || 0, slot: 'p2'   },
+    { name: room.p3_name,    score: room.p3_score     || 0, slot: 'p3'   },
+    { name: room.p4_name,    score: room.p4_score     || 0, slot: 'p4'   },
+  ].filter(p => p.name);
+}
+
+function genRoomCode() {
+  return String(Math.floor(1000 + Math.random() * 9000));
+}
+
+function openRaceScreen() {
+  showScreen('screen-race');
+  document.getElementById('race-coins').textContent = `🪙 ${coins} coins`;
+  document.getElementById('race-lobby').style.display = 'flex';
+  document.getElementById('race-waiting').style.display = 'none';
+  document.getElementById('race-join-row').style.display = 'none';
+  document.getElementById('race-status').textContent = '';
+  const saved = localStorage.getItem('jayjName') || '';
+  if (saved) document.getElementById('race-name').value = saved;
+}
+
+function leaveRace() {
+  clearInterval(raceInterval);
+  clearInterval(raceScoreInterval);
+  clearInterval(racePollInterval);
+  clearInterval(raceWaitPollInterval);
+  if (raceRealtimeSub) { raceRealtimeSub.unsubscribe(); raceRealtimeSub = null; }
+  raceRoom = null; raceRole = null; raceMode = false;
+  document.getElementById('race-hud').style.display = 'none';
+  if (running) { running = false; cancelAnimationFrame(animId); stopMusic(); }
+  showScreen('screen-start');
+}
+
+async function hostRace() {
+  raceName = document.getElementById('race-name').value.trim();
+  if (!raceName) { document.getElementById('race-status').textContent = '⚠️ Enter your name first!'; return; }
+  if (containsBadWord(raceName)) { document.getElementById('race-status').textContent = '❌ Choose a cleaner name!'; return; }
+  const code = genRoomCode();
+  document.getElementById('race-status').textContent = 'Creating room...';
+  try {
+    const res = await sbFetch('/rest/v1/race_rooms', {
+      method: 'POST',
+      headers: { 'Prefer': 'return=representation' },
+      body: JSON.stringify({ id: code, host_name: raceName, status: 'waiting', duration: 60 })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Failed');
+    raceRoom = code; raceRole = 'host';
+    showRaceWaiting(code);
+    pollRaceRoom();
+  } catch(e) {
+    document.getElementById('race-status').textContent = '❌ ' + e.message;
+  }
+}
+
+async function joinRace() {
+  raceName = document.getElementById('race-name').value.trim();
+  if (!raceName) { document.getElementById('race-status').textContent = '⚠️ Enter your name first!'; return; }
+  if (containsBadWord(raceName)) { document.getElementById('race-status').textContent = '❌ Choose a cleaner name!'; return; }
+  const code = document.getElementById('race-code-input').value.trim();
+  if (code.length !== 4) { document.getElementById('race-status').textContent = '⚠️ Enter the 4-digit code!'; return; }
+  document.getElementById('race-status').textContent = 'Joining room...';
+  try {
+    const res = await sbFetch(`/rest/v1/race_rooms?id=eq.${code}&select=*`);
+    const rooms = await res.json();
+    if (!Array.isArray(rooms) || rooms.length === 0) throw new Error('Room not found!');
+    const room = rooms[0];
+    if (room.status !== 'waiting') throw new Error('Race already started!');
+    // Find first empty slot
+    let slot = null;
+    if (!room.p2_name) slot = 'p2';
+    else if (!room.p3_name) slot = 'p3';
+    else if (!room.p4_name) slot = 'p4';
+    else throw new Error('Room is full! (max 4 players)');
+    await sbFetch(`/rest/v1/race_rooms?id=eq.${code}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ [`${slot}_name`]: raceName })
+    });
+    raceRoom = code; raceRole = slot; raceDuration = room.duration;
+    showRaceWaiting(code);
+    pollRaceRoom();
+  } catch(e) {
+    document.getElementById('race-status').textContent = '❌ ' + e.message;
+  }
+}
+
+function showRaceWaiting(code) {
+  document.getElementById('race-lobby').style.display = 'none';
+  document.getElementById('race-waiting').style.display = 'flex';
+  document.getElementById('race-room-code').textContent = code;
+  if (raceRole === 'host') {
+    document.getElementById('race-duration-row').style.display = 'flex';
+    document.getElementById('race-start-btn').style.display = 'block';
+    document.getElementById('race-wait-status').textContent = 'Waiting for players...';
+  } else {
+    document.getElementById('race-duration-row').style.display = 'none';
+    document.getElementById('race-start-btn').style.display = 'none';
+    document.getElementById('race-wait-status').textContent = 'Waiting for host to start...';
+  }
+}
+
+function updateWaitingPlayers(room) {
+  const players = getPlayers(room);
+  const p = document.getElementById('race-players');
+  if (!p) return;
+  p.innerHTML = players.map((pl, i) =>
+    `<div style="color:${PLAYER_COLORS[i]}">${PLAYER_ICONS[i]} ${pl.name}${pl.slot === raceRole ? ' (you)' : ''}</div>`
+  ).join('') + `<div style="color:#4a2d8a;font-size:.8rem;margin-top:4px;">${players.length}/4 players</div>`;
+  if (raceRole === 'host') {
+    document.getElementById('race-wait-status').textContent =
+      players.length >= 2 ? `${players.length} players ready! You can start!` : 'Waiting for at least 1 more player...';
+  }
+}
+
+let racePollInterval = null;
+function pollRaceRoom() {
+  racePollInterval = setInterval(async () => {
+    if (!raceRoom) { clearInterval(racePollInterval); return; }
+    try {
+      const res = await sbFetch(`/rest/v1/race_rooms?id=eq.${raceRoom}&select=*`);
+      const rooms = await res.json();
+      if (!Array.isArray(rooms) || rooms.length === 0) return;
+      const room = rooms[0];
+      updateWaitingPlayers(room);
+      if (room.status === 'racing') {
+        clearInterval(racePollInterval);
+        raceDuration = room.duration;
+        startRaceGame(room);
+      }
+    } catch(e) {}
+  }, 1500);
+}
+
+async function startRaceByHost() {
+  if (!raceRoom) return;
+  const btn = document.getElementById('race-start-btn');
+  btn.disabled = true; btn.textContent = 'Starting...';
+  const res = await sbFetch(`/rest/v1/race_rooms?id=eq.${raceRoom}&select=*`);
+  const rooms = await res.json();
+  const players = getPlayers(rooms[0]);
+  if (players.length < 2) {
+    btn.disabled = false; btn.textContent = '🏁 Start Race!';
+    document.getElementById('race-wait-status').textContent = '⚠️ Need at least 2 players!';
+    return;
+  }
+  await sbFetch(`/rest/v1/race_rooms?id=eq.${raceRoom}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status: 'racing', started_at: new Date().toISOString(), duration: raceDuration })
+  });
+}
+
+function updateRaceHUD(room) {
+  const players = getPlayers(room);
+  const hudScores = document.getElementById('race-hud-scores');
+  if (!hudScores) return;
+  hudScores.innerHTML = players.map((pl, i) => {
+    const isMe = pl.slot === raceRole;
+    return `<span style="color:${PLAYER_COLORS[i]};${isMe?'text-decoration:underline':''}">
+      ${isMe ? 'You' : pl.name}: <span id="race-score-${pl.slot}">${pl.score}</span>
+    </span>`;
+  }).join('');
+}
+
+function startRaceGame(room) {
+  clearInterval(racePollInterval);
+  raceMode = true;
+  document.getElementById('race-timer-display').textContent = room.duration;
+  updateRaceHUD(room);
+  document.getElementById('race-hud').style.display = 'flex';
+  hardcoreMode = false;
+  showScreen('screen-game');
+  document.getElementById('hardcore-badge').style.display = 'none';
+  applyControlMode();
+  initGame(); running = true; lastFrameTime = performance.now(); animId = requestAnimationFrame(loop);
+  stopMusic(); startMusic();
+  raceTimer = room.duration;
+  raceInterval = setInterval(async () => {
+    raceTimer--;
+    document.getElementById('race-timer-display').textContent = raceTimer;
+    if (raceTimer <= 0) { clearInterval(raceInterval); endRaceGame(); }
+  }, 1000);
+  // Sync scores every 2s
+  raceScoreInterval = setInterval(async () => {
+    if (!raceRoom) return;
+    const myField = myScoreField();
+    await sbFetch(`/rest/v1/race_rooms?id=eq.${raceRoom}`, {
+      method: 'PATCH', body: JSON.stringify({ [myField]: score })
+    });
+    const res = await sbFetch(`/rest/v1/race_rooms?id=eq.${raceRoom}&select=*`);
+    const data = await res.json();
+    if (Array.isArray(data) && data[0]) {
+      const players = getPlayers(data[0]);
+      players.forEach(pl => {
+        const el = document.getElementById(`race-score-${pl.slot}`);
+        if (el) el.textContent = pl.slot === raceRole ? score : pl.score;
+      });
+    }
+  }, 2000);
+}
+
+let raceWaitPollInterval = null;
+
+async function racePlayerDied() {
+  // Push final score and mark as dead
+  const myField = myScoreField();
+  const deadField = raceRole === 'host' ? 'host_dead' : `${raceRole}_dead`;
+  document.getElementById('race-hud').style.display = 'none';
+  clearInterval(raceScoreInterval);
+
+  await sbFetch(`/rest/v1/race_rooms?id=eq.${raceRoom}`, {
+    method: 'PATCH', body: JSON.stringify({ [myField]: score, [deadField]: true })
+  });
+
+  // Show waiting screen
+  showScreen('screen-race-waiting');
+  document.getElementById('race-wait-myscore').textContent = score;
+  document.getElementById('race-wait-timer').textContent = raceTimer;
+
+  // Poll for updates and check if everyone is dead or time is up
+  raceWaitPollInterval = setInterval(async () => {
+    if (!raceRoom) { clearInterval(raceWaitPollInterval); return; }
+    document.getElementById('race-wait-timer').textContent = Math.max(0, raceTimer);
+    try {
+      const res = await sbFetch(`/rest/v1/race_rooms?id=eq.${raceRoom}&select=*`);
+      const rooms = await res.json();
+      if (!Array.isArray(rooms) || !rooms[0]) return;
+      const room = rooms[0];
+      const players = getPlayers(room);
+
+      // Update live scores display
+      document.getElementById('race-wait-scores').innerHTML = players.map((pl, i) => {
+        const isDead = room[`${pl.slot === 'host' ? 'host' : pl.slot}_dead`];
+        return `<div style="color:${PLAYER_COLORS[i]}">${isDead ? '💀' : '🎮'} ${pl.name}: ${pl.slot === raceRole ? score : pl.score}</div>`;
+      }).join('');
+
+      // Check if all alive players are dead
+      const allDead = players.every(pl => {
+        const deadKey = pl.slot === 'host' ? 'host_dead' : `${pl.slot}_dead`;
+        return room[deadKey];
+      });
+
+      if (allDead || room.status === 'done') {
+        clearInterval(raceWaitPollInterval);
+        clearInterval(raceInterval);
+        endRaceGame();
+      }
+    } catch(e) {}
+  }, 1500);
+}
+
+async function endRaceGame() {
+  clearInterval(raceScoreInterval);
+  clearInterval(raceWaitPollInterval);
+  running = false; cancelAnimationFrame(animId); stopMusic();
+  document.getElementById('race-hud').style.display = 'none';
+  await sbFetch(`/rest/v1/race_rooms?id=eq.${raceRoom}`, {
+    method: 'PATCH', body: JSON.stringify({ [myScoreField()]: score, status: 'done' })
+  });
+  const res = await sbFetch(`/rest/v1/race_rooms?id=eq.${raceRoom}&select=*`);
+  const rooms = await res.json();
+  const room = rooms[0];
+  const players = getPlayers(room).map(p =>
+    p.slot === raceRole ? { ...p, score } : p
+  ).sort((a, b) => b.score - a.score);
+  const myPos = players.findIndex(p => p.slot === raceRole);
+  const medals = ['🥇','🥈','🥉','4️⃣'];
+  const titles = ['🏆 YOU WIN!', '🥈 2ND PLACE!', '🥉 3RD PLACE!', '💀 LAST PLACE!'];
+  const colors = ['#FFD93D','#c9a0ff','#39ff14','#FF4560'];
+  document.getElementById('race-result-title').textContent = titles[myPos] || titles[3];
+  document.getElementById('race-result-title').style.color = colors[myPos] || colors[3];
+  document.getElementById('race-result-scores').innerHTML = players.map((pl, i) =>
+    `<div style="color:${PLAYER_COLORS[i]}">${medals[i]} ${pl.name}${pl.slot===raceRole?' (you)':''}: ${pl.score}</div>`
+  ).join('');
+  showScreen('screen-race-result');
+  raceMode = false;
+}
+
+// Duration buttons
+document.querySelectorAll('.race-dur-btn').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    raceDuration = parseInt(btn.dataset.dur);
+    document.querySelectorAll('.race-dur-btn').forEach(b => b.style.background = '');
+    btn.style.background = '#39ff14'; btn.style.color = '#0a0a0a';
+    if (raceRoom) {
+      await sbFetch(`/rest/v1/race_rooms?id=eq.${raceRoom}`, {
+        method: 'PATCH', body: JSON.stringify({ duration: raceDuration })
+      });
+    }
+  });
+});
+let devBuffer = '';
+let devOpen = false;
+
+document.addEventListener('keydown', e => {
+  if (devOpen) return;
+  devBuffer += e.key; devBuffer = devBuffer.slice(-7);
+  if (devBuffer === 'loppo12') {
+    devOpen = true; devBuffer = '';
+    document.getElementById('dev-console').style.display = 'block';
+    setTimeout(() => document.getElementById('dev-input').focus(), 50);
+  }
+});
+
+document.getElementById('dev-input').addEventListener('keydown', e => {
+  e.stopPropagation();
+  if (e.key !== 'Enter') return;
+  const cmd = e.target.value.trim().toLowerCase();
+  const out = document.getElementById('dev-output');
+  e.target.value = '';
+  if (cmd === 'close' || cmd === 'exit') {
+    devOpen = false;
+    document.getElementById('dev-console').style.display = 'none';
+    out.textContent = '';
+  } else if (cmd.startsWith('coins ')) {
+    const n = parseInt(cmd.split(' ')[1]);
+    if (!isNaN(n)) { coins += n; saveShop(); updateShopCoins(); out.textContent = `✅ Added ${n} coins. Total: ${coins}`; }
+    else out.textContent = '❌ Usage: coins 1000000';
+  } else if (cmd.startsWith('setcoins ')) {
+    const n = parseInt(cmd.split(' ')[1]);
+    if (!isNaN(n)) { coins = n; saveShop(); updateShopCoins(); out.textContent = `✅ Coins set to ${n}`; }
+    else out.textContent = '❌ Usage: setcoins 500';
+  } else if (cmd === 'killme') {
+    if (running) { endGame(); out.textContent = '💀 RIP'; }
+    else out.textContent = '❌ Not in a game';
+  } else if (cmd === 'resetshop') {
+    ownedSkins = {}; activeSkins = {colour:'default',hat:'none',char:'default',effect:'none'};
+    coins = 0; saveShop(); updateShopCoins(); out.textContent = '✅ Shop reset';
+  } else if (cmd === 'unlockall') {
+    [...SHOP.colours,...SHOP.hats,...SHOP.chars,...SHOP.effects].forEach(i => ownedSkins[i.id]=true);
+    saveShop(); out.textContent = '✅ All skins unlocked';
+  } else if (cmd === 'help') {
+    out.textContent = 'Commands: coins <n> | setcoins <n> | killme | unlockall | resetshop | close';
+  } else {
+    out.textContent = `❌ Unknown: "${cmd}" — type help`;
+  }
+});
+
+document.getElementById('start-btn').addEventListener('click', () => { hardcoreMode=false; startGame(); });
+document.getElementById('hardcore-btn').addEventListener('click', () => { hardcoreMode=true; startGame(); });
+document.getElementById('race-btn').addEventListener('click', openRaceScreen);
+document.getElementById('race-host-btn').addEventListener('click', hostRace);
+document.getElementById('race-join-btn').addEventListener('click', () => {
+  const row = document.getElementById('race-join-row');
+  row.style.display = row.style.display === 'none' ? 'flex' : 'none';
+});
+document.getElementById('race-join-confirm-btn').addEventListener('click', joinRace);
+document.getElementById('race-start-btn').addEventListener('click', startRaceByHost);
+document.getElementById('restart-btn').addEventListener('click', startGame);
+document.getElementById('shop-open-btn').addEventListener('click', openShop);
+document.getElementById('lb-open-btn').addEventListener('click', openLeaderboard);
+document.getElementById('hi-display').textContent=highScore;
+updateShopCoins();
+applyControlMode();
+resetKnob();
+
+document.getElementById('submit-btn').addEventListener('click',()=>{
+  const name = document.getElementById('name-input').value.trim();
+  if (!name) { document.getElementById('lb-status').textContent = '⚠️ Enter a name first!'; return; }
+  if (containsBadWord(name)) { document.getElementById('lb-status').textContent = '❌ Choose a cleaner name bab!'; return; }
+  try { localStorage.setItem('jayjName', name); } catch(e){}
+  submitScore(name, score);
+});
+document.getElementById('name-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('submit-btn').click();
+});
+</script>
+</body>

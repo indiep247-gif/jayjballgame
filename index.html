@@ -29,7 +29,7 @@
       radial-gradient(1px 1px at 10% 80%,rgba(255,255,255,.2) 0%,transparent 100%),
       radial-gradient(2px 2px at 50% 50%,rgba(255,217,61,.15) 0%,transparent 100%);
   }
-  #screen-start, #screen-gameover, #screen-shop, #screen-leaderboard, #screen-race, #screen-race-result, #screen-race-waiting, #screen-account {
+  #screen-start, #screen-gameover, #screen-shop, #screen-leaderboard, #screen-race, #screen-race-result, #screen-race-waiting, #screen-account, #screen-timeattack-result {
     display:none; position:fixed; inset:0;
     flex-direction:column; align-items:center; justify-content:center;
     gap:14px; text-align:center; z-index:10; padding:16px;
@@ -248,6 +248,23 @@
 </head>
 <body>
 
+<!-- TIME ATTACK RESULT -->
+<div id="screen-timeattack-result">
+  <div style="font-family:'Fredoka One',cursive;font-size:2rem;color:var(--yellow);">⏱️ TIME'S UP!</div>
+  <div id="ta-final-score" style="font-family:'Fredoka One',cursive;font-size:1.8rem;color:#fff;">Score: 0</div>
+  <div id="ta-best" style="font-family:'Fredoka One',cursive;font-size:1.1rem;color:#c9a0ff;"></div>
+  <div id="ta-name-entry" style="display:flex;gap:8px;width:100%;max-width:300px;">
+    <input id="ta-name-input" maxlength="12" placeholder="Your name" autocomplete="off" spellcheck="false" style="flex:1;padding:10px 14px;border-radius:50px;border:2px solid #4a2d8a;background:#1a0a3e;color:#fff;font-family:'Fredoka One',cursive;font-size:1rem;outline:none;"/>
+    <button class="btn-small" id="ta-submit-btn">🏆</button>
+  </div>
+  <div id="ta-lb-status" style="font-size:.82rem;color:#39ff14;min-height:1em;"></div>
+  <div id="ta-leaderboard" style="width:100%;max-width:340px;background:var(--panel);border:2px solid #4a2d8a;border-radius:14px;padding:10px;max-height:200px;overflow-y:auto;">
+    <div id="ta-lb-rows">Loading...</div>
+  </div>
+  <button class="btn" onclick="startTimeAttack()">PLAY AGAIN</button>
+  <button class="btn-hardcore" onclick="goToMenu()">🏠 Main Menu</button>
+</div>
+
 <!-- RACE SCREEN -->
 <div id="screen-race">
   <div class="title" style="font-size:2rem">🏁 Multiplayer</div>
@@ -319,8 +336,9 @@
 <div id="screen-leaderboard">
   <div class="title" style="font-size:2rem">🏆 Leaderboard</div>
   <div style="display:flex;gap:0;border-radius:10px;overflow:hidden;border:2px solid #4a2d8a;width:100%;max-width:340px;">
-    <button class="shop-tab active" id="menu-lb-tab-normal"   onclick="menuLbTab('normal')">🏆 Normal</button>
-    <button class="shop-tab"        id="menu-lb-tab-hardcore" onclick="menuLbTab('hardcore')">☠️ Hardcore</button>
+    <button class="shop-tab active" id="menu-lb-tab-normal"     onclick="menuLbTab('normal')">🏆 Normal</button>
+    <button class="shop-tab"        id="menu-lb-tab-hardcore"   onclick="menuLbTab('hardcore')">☠️ Hardcore</button>
+    <button class="shop-tab"        id="menu-lb-tab-timeattack" onclick="menuLbTab('timeattack')">⏱️ Time Attack</button>
   </div>
   <div id="menu-lb-rows" style="background:var(--panel);border:2px solid #4a2d8a;border-radius:14px;padding:10px 16px;width:100%;max-width:340px;min-height:80px;">Loading...</div>
   <button class="btn" onclick="closeLeaderboard()">← Back</button>
@@ -375,6 +393,7 @@
   <div id="play-modes" style="display:none;flex-direction:column;gap:8px;width:100%;max-width:340px;">
     <button class="btn" id="start-btn">🧀 CLASSIC MODE</button>
     <button class="btn-hardcore" id="hardcore-btn">☠️ HARDCORE MODE</button>
+    <button class="btn" id="timeattack-btn" style="background:var(--panel);border:2px solid #FFD93D;color:#FFD93D;box-shadow:0 4px 0 #7a6000;">⏱️ TIME ATTACK</button>
     <button class="btn" id="race-btn" style="background:var(--panel);border:2px solid #39ff14;color:#39ff14;box-shadow:0 4px 0 #1a7a00;">🏁 MULTIPLAYER</button>
   </div>
   <a href="https://kingfelipe.itch.io/jayj-cheese-ball-hunter" target="_blank" style="font-family:'Fredoka One',cursive;font-size:1rem;padding:10px 28px;border-radius:50px;border:2px solid #fa5c5c;background:var(--panel);color:#fa5c5c;text-decoration:none;letter-spacing:1px;">🎮 Play Latest Update on itch.io</a>
@@ -404,6 +423,10 @@
   <details style="max-width:340px;width:100%;text-align:left;">
     <summary style="font-family:'Fredoka One',cursive;color:#c9a0ff;cursor:pointer;font-size:.95rem;letter-spacing:1px;">📋 Patch Notes</summary>
     <div style="background:var(--panel);border:2px solid #4a2d8a;border-radius:12px;padding:10px 14px;margin-top:6px;font-size:.78rem;line-height:1.8;max-height:180px;overflow-y:auto;">
+      <b style="color:var(--yellow)">v1.20</b><br>
+      • ⏱️ Time Attack mode — 60 seconds, no lives, score as much as possible!<br>
+      • Separate Time Attack leaderboard<br>
+      • Dying in Time Attack respawns you instantly<br><br>
       <b style="color:var(--yellow)">v1.19</b><br>
       • 🍎 Speed boost! Rare apples spawn — collect for 8s turbo speed<br>
       • HUD shows countdown timer while boosted<br>
@@ -486,7 +509,7 @@
       • Initial release — JayJ is born! 🎉<br>
     </div>
   </details>
-  <div style="font-size:.75rem;color:#4a2d8a;font-weight:700;letter-spacing:1px;">v1.19</div>
+  <div style="font-size:.75rem;color:#4a2d8a;font-weight:700;letter-spacing:1px;">v1.20</div>
 </div>
 <div style="position:fixed;bottom:8px;left:12px;font-size:.7rem;color:#3a1a6e;font-weight:700;letter-spacing:1px;z-index:5;pointer-events:none;">By Indie Price</div>
 
@@ -499,6 +522,7 @@
     </div>
     <div id="level-badge">LVL 1</div>
     <div id="speed-badge" style="display:none;background:#ff4444;color:#fff;font-family:'Fredoka One',cursive;font-size:.7rem;padding:2px 8px;border-radius:20px;">🍎 BOOST</div>
+    <div id="ta-timer-badge" style="display:none;background:#FFD93D;color:#1a0a2e;font-family:'Fredoka One',cursive;font-size:.85rem;padding:2px 10px;border-radius:20px;">⏱️ 60</div>
     <div id="hardcore-badge">☠️ HARDCORE</div>
     <button id="mute-btn" onclick="toggleMute()">🔊</button>
     <button id="menu-btn" onclick="goToMenu()" title="Main menu">🏠</button>
@@ -1197,7 +1221,7 @@ function loop(ts){
   animId=requestAnimationFrame(loop);
 }
 
-const SCREENS = ['screen-start','screen-game','screen-gameover','screen-shop','screen-leaderboard','screen-race','screen-race-result','screen-race-waiting','screen-account'];
+const SCREENS = ['screen-start','screen-game','screen-gameover','screen-shop','screen-leaderboard','screen-race','screen-race-result','screen-race-waiting','screen-account','screen-timeattack-result'];
 function showScreen(id) {
   SCREENS.forEach(s => {
     const el = document.getElementById(s);
@@ -1213,9 +1237,96 @@ function togglePlayModes() {
   btn.textContent = open ? '🎮 PLAY' : '✖ CLOSE';
 }
 
+// ── TIME ATTACK ─────────────────────────────────────
+let timeAttackMode = false;
+let taTimer = 0;
+let taInterval = null;
+let taBestScore = 0;
+try { taBestScore = parseInt(localStorage.getItem('jayjTABest')||'0')||0; } catch(e){}
+
+function startTimeAttack() {
+  timeAttackMode = true;
+  hardcoreMode = false;
+  taTimer = 60;
+  document.getElementById('ta-timer-badge').style.display = 'block';
+  document.getElementById('ta-timer-badge').textContent = '⏱️ 60';
+  document.getElementById('hardcore-badge').style.display = 'none';
+  showScreen('screen-game');
+  applyControlMode();
+  initGame();
+  // No lives limit in time attack — infinite lives
+  lives = 99;
+  renderLives();
+  running = true; lastFrameTime = performance.now(); animId = requestAnimationFrame(loop);
+  stopMusic(); startMusic();
+  clearInterval(taInterval);
+  taInterval = setInterval(() => {
+    taTimer--;
+    document.getElementById('ta-timer-badge').textContent = `⏱️ ${taTimer}`;
+    if (taTimer <= 0) { clearInterval(taInterval); endTimeAttack(); }
+  }, 1000);
+}
+
+function endTimeAttack() {
+  running = false; cancelAnimationFrame(animId);
+  clearInterval(taInterval);
+  stopMusic(); sfx.gameOver();
+  timeAttackMode = false;
+  document.getElementById('ta-timer-badge').style.display = 'none';
+  if (score > taBestScore) { taBestScore = score; try { localStorage.setItem('jayjTABest', taBestScore); } catch(e){} }
+  document.getElementById('ta-final-score').textContent = `Score: ${score}`;
+  document.getElementById('ta-best').textContent = `Best: ${taBestScore}`;
+  const inp = document.getElementById('ta-name-input');
+  try { const s = localStorage.getItem('jayjName'); if(s) inp.value = s; } catch(e){}
+  fetchTALeaderboard();
+  showScreen('screen-timeattack-result');
+}
+
+async function fetchTALeaderboard(highlight='') {
+  const rows = document.getElementById('ta-lb-rows');
+  rows.textContent = 'Loading...';
+  try {
+    const res = await sbFetch('/rest/v1/scores_timeattack?select=name,score&order=score.desc&limit=10');
+    const data = await res.json();
+    if (!data.length) { rows.textContent = 'No scores yet!'; return; }
+    rows.innerHTML = data.map((r,i) => {
+      const medal = ['🥇','🥈','🥉'][i]||`${i+1}.`;
+      const hl = r.name===highlight ? 'color:#FFD93D;' : 'color:#fff;';
+      return `<div style="display:flex;justify-content:space-between;padding:3px 0;font-family:'Fredoka One',cursive;font-size:.85rem;${hl}"><span>${medal} ${r.name}</span><span>${r.score}</span></div>`;
+    }).join('');
+  } catch(e) { rows.textContent = '❌ Could not load'; }
+}
+
+document.getElementById('ta-submit-btn').addEventListener('click', async () => {
+  const name = document.getElementById('ta-name-input').value.trim();
+  const status = document.getElementById('ta-lb-status');
+  if (!name) { status.textContent = '❌ Enter a name!'; return; }
+  if (containsBadWord(name)) { status.textContent = '❌ Choose a cleaner name bab!'; return; }
+  try { localStorage.setItem('jayjName', name); } catch(e){}
+  document.getElementById('ta-submit-btn').disabled = true;
+  status.textContent = '⏳ Submitting...';
+  try {
+    const res = await sbFetch('/rest/v1/scores_timeattack', {
+      method: 'POST',
+      headers: { 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ name, score })
+    });
+    if (res.ok) { status.textContent = '✅ Submitted!'; fetchTALeaderboard(name); }
+    else { const e = await res.json(); status.textContent = '❌ ' + (e.message||'Error'); }
+  } catch(e) { status.textContent = '❌ ' + e.message; }
+});
+
+document.getElementById('timeattack-btn').addEventListener('click', () => {
+  togglePlayModes();
+  startTimeAttack();
+});
+
+
 function goToMenu(){
   running=false; cancelAnimationFrame(animId);
+  clearInterval(taInterval); timeAttackMode = false;
   stopMusic(); showScreen('screen-start');
+  document.getElementById('ta-timer-badge').style.display = 'none';
   document.getElementById('play-modes').style.display = 'none';
   document.getElementById('play-btn').textContent = '🎮 PLAY';
 }
@@ -1234,6 +1345,15 @@ function endGame(){
   // If in race mode, show waiting screen instead of game over
   if (raceMode) {
     racePlayerDied();
+    return;
+  }
+
+  // In time attack, dying just respawns — no game over
+  if (timeAttackMode) {
+    sfx.veggie();
+    lives = 99;
+    running = true; lastFrameTime = performance.now(); animId = requestAnimationFrame(loop);
+    startMusic();
     return;
   }
 
@@ -1498,11 +1618,13 @@ function closeLeaderboard() {
 }
 async function menuLbTab(tab) {
   const isHard = tab === 'hardcore';
-  document.getElementById('menu-lb-tab-normal').classList.toggle('active', !isHard);
+  const isTA = tab === 'timeattack';
+  document.getElementById('menu-lb-tab-normal').classList.toggle('active', !isHard && !isTA);
   document.getElementById('menu-lb-tab-hardcore').classList.toggle('active', isHard);
+  document.getElementById('menu-lb-tab-timeattack').classList.toggle('active', isTA);
   const el = document.getElementById('menu-lb-rows');
   el.innerHTML = 'Loading...';
-  const endpoint = isHard ? 'scores_hardcore' : 'scores';
+  const endpoint = isHard ? 'scores_hardcore' : isTA ? 'scores_timeattack' : 'scores';
   try {
     const res  = await sbFetch(`/rest/v1/${endpoint}?select=name,score&order=score.desc&limit=10`);
     const rows = await res.json();

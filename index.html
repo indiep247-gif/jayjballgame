@@ -260,7 +260,7 @@
 
 <!-- TIME ATTACK RESULT -->
 <div id="screen-timeattack-result">
-  <div style="font-family:'Fredoka One',cursive;font-size:2rem;color:var(--yellow);">⏱️ TIME'S UP!</div>
+  <div id="ta-timesup-text" style="font-family:'Fredoka One',cursive;font-size:2rem;color:var(--yellow);">⏱️ TIME'S UP!</div>
   <div id="ta-final-score" style="font-family:'Fredoka One',cursive;font-size:1.8rem;color:#fff;">Score: 0</div>
   <div id="ta-best" style="font-family:'Fredoka One',cursive;font-size:1.1rem;color:#c9a0ff;"></div>
   <div id="ta-name-entry" style="display:flex;gap:8px;width:100%;max-width:300px;">
@@ -344,45 +344,45 @@
   </div>
 </div>
 <div id="screen-leaderboard">
-  <div class="title" style="font-size:2rem">🏆 Leaderboard</div>
+  <div class="title" id="lb-title" style="font-size:2rem">🏆 Leaderboard</div>
   <div style="display:flex;gap:0;border-radius:10px;overflow:hidden;border:2px solid #4a2d8a;width:100%;max-width:340px;">
     <button class="shop-tab active" id="menu-lb-tab-normal"     onclick="menuLbTab('normal')">🏆 Normal</button>
     <button class="shop-tab"        id="menu-lb-tab-hardcore"   onclick="menuLbTab('hardcore')">☠️ Hardcore</button>
     <button class="shop-tab"        id="menu-lb-tab-timeattack" onclick="menuLbTab('timeattack')">⏱️ Time Attack</button>
   </div>
   <div id="menu-lb-rows" style="background:var(--panel);border:2px solid #4a2d8a;border-radius:14px;padding:10px 16px;width:100%;max-width:340px;min-height:80px;">Loading...</div>
-  <button class="btn" onclick="closeLeaderboard()">← Back</button>
+  <button class="btn" id="lb-back-btn" onclick="closeLeaderboard()">← Back</button>
 </div>
 
 <!-- SHOP -->
 <div id="screen-shop">
-  <div class="title" style="font-size:2rem">🛍️ Shop</div>
+  <div class="title" id="shop-title" style="font-size:2rem">🛍️ Shop</div>
   <div id="shop-coins">🪙 0 coins</div>
   <div class="shop-tabs">
-    <button class="shop-tab active" onclick="shopTab('colours')">🎨 Colours</button>
-    <button class="shop-tab" onclick="shopTab('hats')">🎩 Hats</button>
-    <button class="shop-tab" onclick="shopTab('chars')">👾 Chars</button>
-    <button class="shop-tab" onclick="shopTab('effects')">✨ Effects</button>
-    <button class="shop-tab" onclick="shopTab('exclusive')" style="color:#FFD93D;">👤 Exclusive</button>
+    <button class="shop-tab active" id="shoptab-colours" onclick="shopTab('colours')">🎨 Colours</button>
+    <button class="shop-tab" id="shoptab-hats" onclick="shopTab('hats')">🎩 Hats</button>
+    <button class="shop-tab" id="shoptab-chars" onclick="shopTab('chars')">👾 Chars</button>
+    <button class="shop-tab" id="shoptab-effects" onclick="shopTab('effects')">✨ Effects</button>
+    <button class="shop-tab" id="shoptab-exclusive" onclick="shopTab('exclusive')" style="color:#FFD93D;">👤 Exclusive</button>
   </div>
   <div class="shop-grid" id="shop-grid"></div>
-  <button class="btn" style="font-size:1.1rem;padding:10px 36px;" onclick="closeShop()">← Back</button>
+  <button class="btn" id="shop-back-btn" style="font-size:1.1rem;padding:10px 36px;" onclick="closeShop()">← Back</button>
 </div>
 
 <!-- DAILY CHALLENGES SCREEN -->
 <div id="screen-daily">
-  <div class="title" style="font-size:2rem;">📅 Daily Challenges</div>
+  <div class="title" id="daily-title" style="font-size:2rem;">📅 Daily Challenges</div>
   <div id="daily-timer" style="font-family:'Fredoka One',cursive;font-size:.9rem;color:#c9a0ff;">Resets in: --:--:--</div>
   <div id="daily-grid" style="width:100%;max-width:380px;display:flex;flex-direction:column;gap:8px;max-height:60vh;overflow-y:auto;"></div>
-  <button class="btn" onclick="showScreen('screen-start')">← Back</button>
+  <button class="btn" id="daily-back-btn" onclick="showScreen('screen-start')">← Back</button>
 </div>
 
 <!-- ACHIEVEMENTS SCREEN -->
 <div id="screen-achievements">
-  <div class="title" style="font-size:2rem;">🏆 Achievements</div>
+  <div class="title" id="achv-title" style="font-size:2rem;">🏆 Achievements</div>
   <div id="achv-progress" style="font-family:'Fredoka One',cursive;font-size:.85rem;color:#c9a0ff;"></div>
   <div id="achv-grid" style="width:100%;max-width:380px;display:flex;flex-direction:column;gap:8px;max-height:60vh;overflow-y:auto;"></div>
-  <button class="btn" onclick="showScreen('screen-start')">← Back</button>
+  <button class="btn" id="achv-back-btn" onclick="showScreen('screen-start')">← Back</button>
 </div>
 
 <!-- ACCOUNT SCREEN -->
@@ -423,7 +423,7 @@
     <button class="btn" id="timeattack-btn" style="background:var(--panel);border:2px solid #FFD93D;color:#FFD93D;box-shadow:0 4px 0 #7a6000;">⏱️ TIME ATTACK</button>
     <button class="btn" id="race-btn" style="background:var(--panel);border:2px solid #39ff14;color:#39ff14;box-shadow:0 4px 0 #1a7a00;">🏁 MULTIPLAYER</button>
   </div>
-  <a href="https://kingfelipe.itch.io/jayj-cheese-ball-hunter" target="_blank" style="font-family:'Fredoka One',cursive;font-size:1rem;padding:10px 28px;border-radius:50px;border:2px solid #fa5c5c;background:var(--panel);color:#fa5c5c;text-decoration:none;letter-spacing:1px;">🎮 Play Latest Update on itch.io</a>
+  <a id="itch-btn" href="https://kingfelipe.itch.io/jayj-cheese-ball-hunter" target="_blank" style="font-family:'Fredoka One',cursive;font-size:1rem;padding:10px 28px;border-radius:50px;border:2px solid #fa5c5c;background:var(--panel);color:#fa5c5c;text-decoration:none;letter-spacing:1px;">🎮 Play Latest Update on itch.io</a>
   <!-- Account button / logged in display -->
   <div id="acct-menu-area" style="width:100%;max-width:340px;display:flex;flex-direction:column;align-items:center;gap:6px;justify-content:center;text-align:center;">
     <div id="acct-guest-warn" style="display:none;background:rgba(250,92,92,.12);border:1.5px solid #fa5c5c;border-radius:10px;padding:6px 12px;font-size:.72rem;color:#fa5c5c;text-align:center;line-height:1.5;">
@@ -435,12 +435,12 @@
     </div>
     <button id="acct-open-btn" class="btn-small" onclick="showScreen('screen-account')" style="width:100%;">👤 Log In / Sign Up</button>
   </div>
-  <div style="display:flex;gap:8px;width:100%;max-width:340px;justify-content:center;">
-    <button class="btn-small" style="flex:1" id="shop-open-btn">🛍️ Shop</button>
-    <button class="btn-small" style="flex:1" id="lb-open-btn">🏆 Leaderboard</button>
-    <button class="btn-small" style="flex:1" onclick="openAchievements()">🎖️ Achvs</button>
-    <button class="btn-small" style="flex:1" onclick="openDaily()">📅 Daily</button>
-    <div style="position:relative;flex:1;display:flex;flex-direction:column;align-items:center;">
+  <div style="display:flex;flex-wrap:wrap;gap:6px;width:100%;max-width:340px;justify-content:center;">
+    <button class="btn-small" id="shop-open-btn">🛍️ Shop</button>
+    <button class="btn-small" id="lb-open-btn">🏆 Leaderboard</button>
+    <button class="btn-small" id="achvs-btn" onclick="openAchievements()">🎖️ Achvs</button>
+    <button class="btn-small" id="daily-btn" onclick="openDaily()">📅 Daily</button>
+    <div style="position:relative;display:flex;flex-direction:column;align-items:center;">
       <button class="btn-small" style="width:100%" id="ctrl-menu-btn" onclick="cycleControls()">🕹️ Keyboard</button>
       <div id="mobile-ctrl-hint" style="position:absolute;top:calc(100% + 10px);left:50%;transform:translateX(-50%);white-space:nowrap;font-family:'Fredoka One',cursive;font-size:.72rem;color:#39ff14;background:rgba(10,10,20,.92);border:2px solid #39ff14;border-radius:10px;padding:4px 10px;pointer-events:none;z-index:5;">
         <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;border-bottom:10px solid #39ff14;"></div>
@@ -576,7 +576,7 @@
 <div id="screen-game">
   <div id="hud">
     <div class="hud-col">
-      <span class="score-label">Score</span>
+      <span class="score-label" id="hud-score-label">Score</span>
       <span class="score-val" id="score-display">0</span>
     </div>
     <div id="level-badge">LVL 1</div>
@@ -587,11 +587,11 @@
     <button id="pause-btn" onclick="togglePause()" title="Pause">⏸️</button>
     <button id="menu-btn" onclick="goToMenu()" title="Main menu">🏠</button>
     <div class="hud-col" style="align-items:flex-end">
-      <span class="score-label">Best</span>
+      <span class="score-label" id="hud-best-label">Best</span>
       <span class="hi-val" id="hi-display">0</span>
     </div>
     <div class="hud-col" style="align-items:flex-end">
-      <span class="score-label">Lives</span>
+      <span class="score-label" id="hud-lives-label">Lives</span>
       <div class="lives" id="lives-display"></div>
     </div>
   </div>
@@ -626,7 +626,7 @@
     <div id="lb-rows">Loading...</div>
   </div>
   <button class="btn" id="restart-btn">PLAY AGAIN</button>
-  <button class="btn-hardcore" onclick="goToMenu()">🏠 Main Menu</button>
+  <button class="btn-hardcore" id="go-menu-btn" onclick="goToMenu()">🏠 Main Menu</button>
 </div>
 
 <!-- DEV CONSOLE -->
@@ -1108,8 +1108,9 @@ function update(dt=1) {
 
 // ── HUD ────────────────────────────────────────────
 function updateHUD(){
+  const L = LANG[currentLang];
   document.getElementById('score-display').textContent=score;
-  document.getElementById('level-badge').textContent=`LVL ${level}`;
+  document.getElementById('level-badge').textContent=`${currentLang==='zh'?'等级':'LVL'} ${level}`;
   if(score>highScore){ highScore=score; try{localStorage.setItem('jayjHi',highScore);}catch(e){} acctSaveProgress(); }
   checkAchievements('score', score);
   if (hardcoreMode) updateDailyProgress('hcscore', score);
@@ -1416,7 +1417,14 @@ function togglePlayModes() {
   const btn = document.getElementById('play-btn');
   const open = modes.style.display === 'flex';
   modes.style.display = open ? 'none' : 'flex';
-  btn.textContent = open ? '🎮 PLAY' : '✖ CLOSE';
+  const L = LANG[currentLang];
+  btn.textContent = open ? L.play : '✖ ' + (currentLang === 'zh' ? '关闭' : 'CLOSE');
+  if (!open) {
+    document.getElementById('start-btn').textContent = L.classic;
+    document.getElementById('hardcore-btn').textContent = L.hardcore;
+    document.getElementById('timeattack-btn').textContent = L.timeattack;
+    document.getElementById('race-btn').textContent = L.multiplayer;
+  }
 }
 
 // ── TIME ATTACK ─────────────────────────────────────
@@ -1458,7 +1466,7 @@ function endTimeAttack() {
   if (score > taBestScore) { taBestScore = score; try { localStorage.setItem('jayjTABest', taBestScore); } catch(e){} }
   checkAchievements('time_attack');
   updateDailyProgress('tascore', score);
-  document.getElementById('ta-final-score').textContent = `Score: ${score}`;
+  document.getElementById('ta-final-score').textContent = `${LANG[currentLang].finalScore} ${score}`;
   document.getElementById('ta-best').textContent = `Best: ${taBestScore}`;
   const inp = document.getElementById('ta-name-input');
   try { const s = localStorage.getItem('jayjName'); if(s) inp.value = s; } catch(e){}
@@ -1678,7 +1686,7 @@ function startDailyTimer() {
     const m = String(Math.floor((diff % 3600000) / 60000)).padStart(2,'0');
     const s = String(Math.floor((diff % 60000) / 1000)).padStart(2,'0');
     const el = document.getElementById('daily-timer');
-    if (el) el.textContent = `Resets in: ${h}:${m}:${s}`;
+    if (el) el.textContent = `${LANG[currentLang].dailyResetsIn} ${h}:${m}:${s}`;
   }
   tick();
   dailyTimerInterval = setInterval(tick, 1000);
@@ -1688,7 +1696,7 @@ function renderDaily() {
   const challenges = getTodaysChallenges();
   const grid = document.getElementById('daily-grid');
   if (!grid) return;
-  const tierLabel = ['','⭐ Easy','⭐⭐ Medium','⭐⭐⭐ Hard'];
+  const L3=LANG[currentLang]; const tierLabel = ['',L3.tierEasy,L3.tierMed,L3.tierHard];
   const tierColour = ['','#39ff14','#FFD93D','#ff6060'];
   grid.innerHTML = challenges.map(c => {
     const prog = dailyProgress[c.id] || 0;
@@ -1793,7 +1801,7 @@ function openAchievements() {
 
 function renderAchievements() {
   const unlocked = Object.keys(unlockedAchievements).length;
-  document.getElementById('achv-progress').textContent = `${unlocked} / ${ACHIEVEMENTS.length} unlocked`;
+  document.getElementById('achv-progress').textContent = `${unlocked} / ${ACHIEVEMENTS.length} ${LANG[currentLang].achvUnlocked}`;
   document.getElementById('achv-grid').innerHTML = ACHIEVEMENTS.map(a => {
     const done = !!unlockedAchievements[a.id];
     return `<div style="display:flex;align-items:center;gap:12px;background:var(--panel);border:2px solid ${done?'#ffd700':'#4a2d8a'};border-radius:12px;padding:10px 14px;opacity:${done?1:.5};">
@@ -1832,6 +1840,141 @@ async function checkLeaderboardNumber1() {
   }
 }
 
+// ── LANGUAGE ────────────────────────────────────────
+const LANG = {
+  en: {
+    title:'JayJ – Cheese Hunter from Brum', subtitle:'🧀 Eat cheese. Dodge veggies. Be the best.',
+    play:'🎮 PLAY', close:'✖ CLOSE',
+    classic:'🧀 CLASSIC MODE', hardcore:'☠️ HARDCORE MODE', timeattack:'⏱️ TIME ATTACK', multiplayer:'🏁 MULTIPLAYER',
+    shop:'🛍️ Shop', leaderboard:'🏆 Leaderboard', achvs:'🎖️ Achvs', daily:'📅 Daily',
+    login:'👤 Log In / Sign Up', itch:'🎮 Play Latest Update on itch.io',
+    guestwarn:'🕹️ Playing as guest — progress may be wiped on updates.<br>Log in to save your coins &amp; skins!',
+    back:'← Back',
+    lbTitle:'🏆 Leaderboard', lbNormal:'🏆 Normal', lbHardcore:'☠️ Hardcore', lbTimeattack:'⏱️ Time Attack',
+    shopTitle:'🛍️ Shop', shopColours:'🎨 Colours', shopHats:'🎩 Hats', shopChars:'👾 Chars', shopEffects:'✨ Effects', shopExclusive:'👤 Exclusive',
+    shopLockMsg:'👤 Log in to access exclusive items!', shopExclSubtitle:'✨ Account-exclusive items — only available to logged-in players!',
+    owned:'✔ owned', equipped:'✅ ON', leaderboardOnly:'🏆 #1 Only',
+    dailyTitle:'📅 Daily Challenges', dailyResetsIn:'Resets in:',
+    tierEasy:'⭐ Easy', tierMed:'⭐⭐ Medium', tierHard:'⭐⭐⭐ Hard',
+    achvTitle:'🏆 Achievements', achvUnlocked:'unlocked',
+    hudScore:'Score', hudBest:'Best', hudLives:'Lives',
+    gameOver:'GAME OVER, BAB!', finalScore:'Score:', playAgain:'PLAY AGAIN', mainMenu:'🏠 Main Menu',
+    goLbNormal:'🏆 Normal', goLbHardcore:'☠️ Hardcore',
+    nameInput:'Your name', submitBtn:'Submit 🏆',
+    hardcoreBadge:'☠️ HARDCORE', timesUp:'TIME’S UP!',
+    buyConfirm:'✅ Buy', buyCancel:'❌ Cancel',
+  },
+  zh: {
+    title:'JayJ – 伯明翰奶酪猎人', subtitle:'🧀 吃奶酪。躺蔬菜。成为最强。',
+    play:'🎮 开始游戏', close:'✖ 关闭',
+    classic:'🧀 经典模式', hardcore:'☠️ 硬核模式', timeattack:'⏱️ 限时挑战', multiplayer:'🏁 多人对战',
+    shop:'🛍️ 商店', leaderboard:'🏆 排行榜', achvs:'🎖️ 成就', daily:'📅 每日',
+    login:'👤 登录 / 注册', itch:'🎮 在 itch.io 上游玩最新版本',
+    guestwarn:'🕹️ 访客模式 — 更新后进度可能丢失。<br>登录以保存金币和皮肤！',
+    back:'← 返回',
+    lbTitle:'🏆 排行榜', lbNormal:'🏆 普通', lbHardcore:'☠️ 硬核', lbTimeattack:'⏱️ 限时',
+    shopTitle:'🛍️ 商店', shopColours:'🎨 颜色', shopHats:'🎩 帽子', shopChars:'👾 角色', shopEffects:'✨ 特效', shopExclusive:'👤 专属',
+    shopLockMsg:'👤 登录后解锁专属物品！', shopExclSubtitle:'✨ 专属物品 — 仅限登录玩家使用！',
+    owned:'✔ 已拥有', equipped:'✅ 使用中', leaderboardOnly:'🏆 仅限第一名',
+    dailyTitle:'📅 每日挑战', dailyResetsIn:'重置倒计时:',
+    tierEasy:'⭐ 简单', tierMed:'⭐⭐ 中等', tierHard:'⭐⭐⭐ 困难',
+    achvTitle:'🏆 成就', achvUnlocked:'已解锁',
+    hudScore:'分数', hudBest:'最高分', hudLives:'生命',
+    gameOver:'游戏结束！', finalScore:'分数:', playAgain:'再玩一次', mainMenu:'🏠 主菜单',
+    goLbNormal:'🏆 普通', goLbHardcore:'☠️ 硬核',
+    nameInput:'输入名字', submitBtn:'提交 🏆',
+    hardcoreBadge:'☠️ 硬核', timesUp:'时间到！',
+    buyConfirm:'✅ 购买', buyCancel:'❌ 取消',
+  }
+};
+
+let currentLang = 'en';
+// Always start in English - language is a session preference only
+try { localStorage.setItem('jayjLang', 'en'); } catch(e) {}
+
+function applyLang() {
+  const L = LANG[currentLang];
+  const zh = currentLang === 'zh';
+  document.getElementById('lang-btn').textContent = zh ? '🌐 EN' : '🌐 中文';
+  document.title = L.title;
+  const titleEl = document.querySelector('#screen-start .title');
+  if (titleEl) titleEl.textContent = L.title;
+  const subEl = document.querySelector('#screen-start .subtitle');
+  if (subEl) subEl.textContent = L.subtitle;
+  const playBtn = document.getElementById('play-btn');
+  if (playBtn && document.getElementById('play-modes').style.display !== 'flex') playBtn.textContent = L.play;
+  document.getElementById('shop-open-btn').textContent = L.shop;
+  document.getElementById('lb-open-btn').textContent = L.leaderboard;
+  document.getElementById('achvs-btn').textContent = L.achvs;
+  document.getElementById('daily-btn').textContent = L.daily;
+  const acctBtn = document.getElementById('acct-open-btn');
+  if (acctBtn) acctBtn.textContent = L.login;
+  const itchBtn = document.getElementById('itch-btn');
+  if (itchBtn) itchBtn.textContent = L.itch;
+  const warn = document.getElementById('acct-guest-warn');
+  if (warn) warn.innerHTML = L.guestwarn;
+  document.getElementById('start-btn').textContent = L.classic;
+  document.getElementById('hardcore-btn').textContent = L.hardcore;
+  document.getElementById('timeattack-btn').textContent = L.timeattack;
+  document.getElementById('race-btn').textContent = L.multiplayer;
+  // Leaderboard
+  const lbTitle = document.getElementById('lb-title'); if (lbTitle) lbTitle.textContent = L.lbTitle;
+  const lbBack = document.getElementById('lb-back-btn'); if (lbBack) lbBack.textContent = L.back;
+  const lbNorm = document.getElementById('menu-lb-tab-normal'); if (lbNorm) lbNorm.textContent = L.lbNormal;
+  const lbHard = document.getElementById('menu-lb-tab-hardcore'); if (lbHard) lbHard.textContent = L.lbHardcore;
+  const lbTA = document.getElementById('menu-lb-tab-timeattack'); if (lbTA) lbTA.textContent = L.lbTimeattack;
+  // Shop
+  const shopTitle = document.getElementById('shop-title'); if (shopTitle) shopTitle.textContent = L.shopTitle;
+  const shopBack = document.getElementById('shop-back-btn'); if (shopBack) shopBack.textContent = L.back;
+  const stc = document.getElementById('shoptab-colours'); if (stc) stc.textContent = L.shopColours;
+  const sth = document.getElementById('shoptab-hats'); if (sth) sth.textContent = L.shopHats;
+  const stch = document.getElementById('shoptab-chars'); if (stch) stch.textContent = L.shopChars;
+  const ste = document.getElementById('shoptab-effects'); if (ste) ste.textContent = L.shopEffects;
+  const stex = document.getElementById('shoptab-exclusive'); if (stex) stex.textContent = L.shopExclusive;
+  // Daily
+  const dailyTitle = document.getElementById('daily-title'); if (dailyTitle) dailyTitle.textContent = L.dailyTitle;
+  const dailyBack = document.getElementById('daily-back-btn'); if (dailyBack) dailyBack.textContent = L.back;
+  // Achievements
+  const achvTitle = document.getElementById('achv-title'); if (achvTitle) achvTitle.textContent = L.achvTitle;
+  const achvBack = document.getElementById('achv-back-btn'); if (achvBack) achvBack.textContent = L.back;
+  // Game HUD (always English during play, only update when not in game)
+  const inGame = document.getElementById('screen-game').style.display !== 'none';
+  if (!inGame) {
+    const hsl = document.getElementById('hud-score-label'); if (hsl) hsl.textContent = L.hudScore;
+    const hbl = document.getElementById('hud-best-label');  if (hbl) hbl.textContent = L.hudBest;
+    const hll = document.getElementById('hud-lives-label'); if (hll) hll.textContent = L.hudLives;
+  }
+  // Game over screen
+  const goTitle = document.getElementById('go-title'); if (goTitle) goTitle.textContent = L.gameOver;
+  const restartBtn = document.getElementById('restart-btn'); if (restartBtn) restartBtn.textContent = L.playAgain;
+  const goMenuBtn = document.getElementById('go-menu-btn'); if (goMenuBtn) goMenuBtn.textContent = L.mainMenu;
+  const lbTabN = document.getElementById('lb-tab-normal'); if (lbTabN) lbTabN.textContent = L.goLbNormal;
+  const lbTabH = document.getElementById('lb-tab-hardcore'); if (lbTabH) lbTabH.textContent = L.goLbHardcore;
+  const nameInp = document.getElementById('name-input'); if (nameInp) nameInp.placeholder = L.nameInput;
+  const submitBtn = document.getElementById('submit-btn'); if (submitBtn) submitBtn.textContent = L.submitBtn;
+  // Buy modal
+  const buyConf = document.getElementById('buy-confirm-btn'); if (buyConf) buyConf.textContent = L.buyConfirm;
+  const buyCanc = document.getElementById('buy-cancel-btn'); if (buyCanc) buyCanc.textContent = L.buyCancel;
+  // In-game static text (always update these even mid-game)
+  const taText = document.getElementById('ta-timesup-text'); if (taText) taText.textContent = '⏱️ ' + L.timesUp;
+  const hcBadge = document.getElementById('hardcore-badge'); if (hcBadge && hcBadge.style.display !== 'none') hcBadge.textContent = L.hardcoreBadge;
+  const hsl = document.getElementById('hud-score-label'); if (hsl) hsl.textContent = L.hudScore;
+  const hbl = document.getElementById('hud-best-label'); if (hbl) hbl.textContent = L.hudBest;
+  const hll = document.getElementById('hud-lives-label'); if (hll) hll.textContent = L.hudLives;
+  // Re-render dynamic content
+  if (document.getElementById('shop-grid').innerHTML) renderShopGrid();
+  renderAchievements();
+  renderDaily();
+}
+
+function toggleLang() {
+  currentLang = currentLang === 'en' ? 'zh' : 'en';
+  try { localStorage.setItem('jayjLang', currentLang); } catch(e) {}
+  applyLang();
+}
+
+setTimeout(applyLang, 100);
+
 // ── NAVIGATION ── DO NOT INSERT CODE ABOVE THIS LINE ──
 function goToMenu(){
   paused = false;
@@ -1842,7 +1985,14 @@ function goToMenu(){
   stopMusic(); showScreen('screen-start');
   document.getElementById('ta-timer-badge').style.display = 'none';
   document.getElementById('play-modes').style.display = 'none';
-  document.getElementById('play-btn').textContent = '🎮 PLAY';
+  document.getElementById('play-btn').textContent = currentLang === 'zh' ? '🎮 开始游戏' : '🎮 PLAY';
+  // Reset mode button text to current language
+  const L = LANG[currentLang];
+  document.getElementById('start-btn').textContent = L.classic;
+  document.getElementById('hardcore-btn').textContent = L.hardcore;
+  document.getElementById('timeattack-btn').textContent = L.timeattack;
+  document.getElementById('race-btn').textContent = L.multiplayer;
+  applyLang();
 }
 function startGame(){
   resumeAC();
@@ -1872,7 +2022,7 @@ function endGame(){
   }
 
   showScreen('screen-gameover');
-  document.getElementById('final-score').textContent=`Score: ${score}`;
+  document.getElementById('final-score').textContent=`${LANG[currentLang].finalScore} ${score}`;
   document.getElementById('final-hi').textContent=`Best: ${highScore}`;
   // Save coins earned during game
   try { localStorage.setItem('jayjCoins', coins); } catch(e){}
@@ -2094,18 +2244,16 @@ function renderShopGrid() {
   // Exclusive tab
   if (currentShopTab === 'exclusive') {
     if (!loggedInUser) {
-      grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;font-family:'Fredoka One',cursive;color:#FFD93D;padding:20px;">
-        👤 Log in to access exclusive items!
-      </div>`;
+      grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;font-family:'Fredoka One',cursive;color:#FFD93D;padding:20px;">${LANG[currentLang].shopLockMsg}</div>`;
       return;
     }
     const items = SHOP.exclusive;
-    grid.innerHTML = `<div style="grid-column:1/-1;font-family:'Fredoka One',cursive;font-size:.75rem;color:#c9a0ff;text-align:center;margin-bottom:4px;">✨ Account-exclusive items — only available to logged-in players!</div>` +
+    grid.innerHTML = `<div style="grid-column:1/-1;font-family:'Fredoka One',cursive;font-size:.75rem;color:#c9a0ff;text-align:center;margin-bottom:4px;">${LANG[currentLang].shopExclSubtitle}</div>` +
       items.map(item => {
         const owned = isOwned(item.id);
         const catKey = {hat:'hat', char:'char', effect:'effect'}[item.cat];
         const equipped = activeSkins[catKey] === item.id;
-        const priceLabel = equipped ? '✅ ON' : owned ? '✔ owned' : '🪙'+item.price;
+        const priceLabel = equipped ? LANG[currentLang].equipped : owned ? LANG[currentLang].owned : '🪙'+item.price;
         return `<div class="shop-item ${owned?'owned':''} ${equipped?'active-skin':''}" style="border-color:#FFD93D55;"
           onclick="shopClickExclusive('${item.id}')">
           <div class="shop-preview">${item.preview}</div>
@@ -2123,7 +2271,7 @@ function renderShopGrid() {
     const owned    = isOwned(item.id);
     const equipped = activeSkins[catKey] === item.id;
     const isLocked = item.exclusive && !isExclusiveUnlocked(item);
-    const priceLabel = equipped ? '✅ ON' : owned ? '✔ owned' : isLocked ? '🏆 #1 Only' : '🪙'+item.price;
+    const L2=LANG[currentLang]; const priceLabel = equipped ? L2.equipped : owned ? L2.owned : isLocked ? L2.leaderboardOnly : '🪙'+item.price;
     return `<div class="shop-item ${owned?'owned':''} ${equipped?'active-skin':''}"
       onclick="shopClick('${currentShopTab}','${item.id}')" style="${isLocked?'opacity:.55;':''}">
       <div class="shop-preview">${item.preview}</div>
@@ -2637,4 +2785,5 @@ document.getElementById('name-input').addEventListener('keydown', e => {
   if (e.key === 'Enter') document.getElementById('submit-btn').click();
 });
 </script>
+<button id="lang-btn" onclick="toggleLang()" style="position:fixed;bottom:12px;right:12px;font-family:'Fredoka One',cursive;font-size:.7rem;padding:5px 10px;border-radius:20px;border:1.5px solid #4a2d8a;background:#1a0a3e;color:#c9a0ff;cursor:pointer;z-index:9999;opacity:.85;">🌐 中文</button>
 </body>

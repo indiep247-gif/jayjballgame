@@ -2729,7 +2729,7 @@ let devOpen = false;
 document.addEventListener('keydown', e => {
   if (devOpen) return;
   devBuffer += e.key; devBuffer = devBuffer.slice(-6);
-  if (devBuffer === 'loppo0') {
+  if (devBuffer === '909090') {
     devOpen = true; devBuffer = '';
     document.getElementById('dev-console').style.display = 'block';
     setTimeout(() => document.getElementById('dev-input').focus(), 50);

@@ -2096,7 +2096,10 @@ window.addEventListener('keydown',e=>{
     if(cheatBuffer === 'uiop00') { cheatBuffer=''; endGame(); }
   }
 });
-window.addEventListener('keyup',e=>keys[e.key]=false);
+window.addEventListener('keyup',e=>{ keys[e.key]=false; });
+// Clear all keys if window loses focus — prevents stuck keys (e.g. A key drift)
+window.addEventListener('blur',()=>{ for(const k in keys) keys[k]=false; });
+document.addEventListener('visibilitychange',()=>{ if(document.hidden) for(const k in keys) keys[k]=false; });
 window.addEventListener('touchstart',()=>enableTouch(),{passive:true,once:true});
 if(window.matchMedia('(pointer:coarse)').matches) enableTouch();
 

@@ -632,10 +632,42 @@
 </div>
 
 <!-- DEV CONSOLE -->
-<div id="dev-console" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#0a0a0a;border-top:2px solid #39ff14;padding:6px 10px;font-family:monospace;font-size:.85rem;">
-  <span style="color:#39ff14">DEV &gt;</span>
-  <input id="dev-input" style="background:none;border:none;outline:none;color:#39ff14;width:calc(100% - 60px);font-family:monospace;font-size:.85rem;" placeholder="type a command..." autocomplete="off" spellcheck="false"/>
-  <span id="dev-output" style="color:#aaa;font-size:.75rem;display:block;min-height:14px;"></span>
+<div id="dev-console" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;">
+  <div style="background:#111;border:2px solid #39ff14;border-radius:12px;padding:24px;width:320px;font-family:monospace;box-shadow:0 0 40px #39ff1440;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+      <span style="color:#39ff14;font-size:1.1rem;font-weight:bold;">⚙️ DEV MENU</span>
+      <button id="dev-close-btn" style="background:none;border:1px solid #555;color:#aaa;border-radius:6px;padding:2px 10px;cursor:pointer;font-family:monospace;">✕</button>
+    </div>
+    <!-- GIVE COINS SECTION -->
+    <div style="background:#1a1a1a;border-radius:8px;padding:14px;margin-bottom:12px;">
+      <div style="color:#39ff14;font-size:.8rem;margin-bottom:10px;">🪙 GIVE COINS TO PLAYER</div>
+      <input id="dev-coin-user" placeholder="username" autocomplete="off" spellcheck="false"
+        style="width:100%;box-sizing:border-box;background:#222;border:1px solid #39ff14;border-radius:6px;color:#fff;padding:7px 10px;font-family:monospace;font-size:.85rem;margin-bottom:8px;"/>
+      <div style="display:flex;gap:6px;margin-bottom:8px;">
+        <input id="dev-coin-amt" placeholder="amount" type="number" autocomplete="off"
+          style="flex:1;background:#222;border:1px solid #39ff14;border-radius:6px;color:#fff;padding:7px 10px;font-family:monospace;font-size:.85rem;"/>
+        <button id="dev-give-btn" style="background:#39ff14;color:#000;border:none;border-radius:6px;padding:7px 14px;font-family:monospace;font-weight:bold;cursor:pointer;font-size:.85rem;">GIVE</button>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button class="dev-quick-coin" data-amt="500"  style="flex:1;background:#1e3a1e;border:1px solid #39ff14;color:#39ff14;border-radius:5px;padding:4px;cursor:pointer;font-family:monospace;font-size:.75rem;">+500</button>
+        <button class="dev-quick-coin" data-amt="1000" style="flex:1;background:#1e3a1e;border:1px solid #39ff14;color:#39ff14;border-radius:5px;padding:4px;cursor:pointer;font-family:monospace;font-size:.75rem;">+1000</button>
+        <button class="dev-quick-coin" data-amt="5000" style="flex:1;background:#1e3a1e;border:1px solid #39ff14;color:#39ff14;border-radius:5px;padding:4px;cursor:pointer;font-family:monospace;font-size:.75rem;">+5000</button>
+        <button class="dev-quick-coin" data-amt="10000" style="flex:1;background:#1e3a1e;border:1px solid #39ff14;color:#39ff14;border-radius:5px;padding:4px;cursor:pointer;font-family:monospace;font-size:.75rem;">+10k</button>
+      </div>
+      <div id="dev-coin-status" style="color:#aaa;font-size:.75rem;min-height:16px;margin-top:8px;"></div>
+    </div>
+    <!-- OTHER DEV ACTIONS -->
+    <div style="background:#1a1a1a;border-radius:8px;padding:14px;">
+      <div style="color:#39ff14;font-size:.8rem;margin-bottom:10px;">🛠️ LOCAL CHEATS</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button class="dev-action-btn" data-cmd="unlockall" style="flex:1;min-width:80px;background:#1a1a2e;border:1px solid #6666ff;color:#aaa;border-radius:5px;padding:6px;cursor:pointer;font-family:monospace;font-size:.75rem;">unlock all</button>
+        <button class="dev-action-btn" data-cmd="resetshop" style="flex:1;min-width:80px;background:#2e1a1a;border:1px solid #ff4444;color:#aaa;border-radius:5px;padding:6px;cursor:pointer;font-family:monospace;font-size:.75rem;">reset shop</button>
+        <button class="dev-action-btn" data-cmd="cheeserain" style="flex:1;min-width:80px;background:#2e2a1a;border:1px solid #ffaa00;color:#aaa;border-radius:5px;padding:6px;cursor:pointer;font-family:monospace;font-size:.75rem;">🧀 rain</button>
+        <button class="dev-action-btn" data-cmd="killme" style="flex:1;min-width:80px;background:#2e1a1a;border:1px solid #ff4444;color:#aaa;border-radius:5px;padding:6px;cursor:pointer;font-family:monospace;font-size:.75rem;">💀 die</button>
+      </div>
+      <div id="dev-action-status" style="color:#aaa;font-size:.75rem;min-height:16px;margin-top:8px;"></div>
+    </div>
+  </div>
 </div>
 
 <!-- BUY CONFIRM MODAL -->
@@ -2726,60 +2758,84 @@ document.querySelectorAll('.race-dur-btn').forEach(btn => {
 let devBuffer = '';
 let devOpen = false;
 
+function openDevMenu() {
+  devOpen = true; devBuffer = '';
+  const el = document.getElementById('dev-console');
+  el.style.display = 'flex';
+  setTimeout(() => document.getElementById('dev-coin-user').focus(), 50);
+}
+function closeDevMenu() {
+  devOpen = false;
+  document.getElementById('dev-console').style.display = 'none';
+  document.getElementById('dev-coin-status').textContent = '';
+  document.getElementById('dev-action-status').textContent = '';
+}
+
 document.addEventListener('keydown', e => {
-  if (devOpen) return;
+  if (devOpen) { if (e.key === 'Escape') closeDevMenu(); return; }
   devBuffer += e.key; devBuffer = devBuffer.slice(-6);
-  if (devBuffer === '909090') {
-    devOpen = true; devBuffer = '';
-    document.getElementById('dev-console').style.display = 'block';
-    setTimeout(() => document.getElementById('dev-input').focus(), 50);
+  if (devBuffer === '909090') openDevMenu();
+});
+
+document.getElementById('dev-close-btn').addEventListener('click', closeDevMenu);
+
+// Quick coin amount buttons — fill the amount field
+document.querySelectorAll('.dev-quick-coin').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.getElementById('dev-coin-amt').value = btn.dataset.amt;
+  });
+});
+
+// Give coins to a player account via Supabase
+document.getElementById('dev-give-btn').addEventListener('click', async () => {
+  const username = document.getElementById('dev-coin-user').value.trim();
+  const amt = parseInt(document.getElementById('dev-coin-amt').value);
+  const status = document.getElementById('dev-coin-status');
+  if (!username) { status.textContent = '❌ Enter a username'; status.style.color='#ff6666'; return; }
+  if (isNaN(amt) || amt <= 0) { status.textContent = '❌ Enter a valid amount'; status.style.color='#ff6666'; return; }
+  status.textContent = '⏳ Looking up player...'; status.style.color='#aaa';
+  try {
+    // Fetch current coins
+    const res = await sbFetch(`/rest/v1/user_accounts?username=eq.${encodeURIComponent(username)}&select=id,username,coins`);
+    const data = await res.json();
+    if (!data.length) { status.textContent = `❌ No account found: "${username}"`; status.style.color='#ff6666'; return; }
+    const player = data[0];
+    const newCoins = (player.coins || 0) + amt;
+    status.textContent = '⏳ Updating...'; status.style.color='#aaa';
+    await sbFetch(`/rest/v1/user_accounts?id=eq.${player.id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ coins: newCoins })
+    });
+    status.textContent = `✅ Gave ${amt} coins to ${player.username}! (now ${newCoins})`;
+    status.style.color = '#39ff14';
+    // If it's the currently logged-in player, update local too
+    if (loggedInUser && loggedInUser.id === player.id) {
+      coins = newCoins; saveShop(); updateShopCoins();
+    }
+  } catch(e) {
+    status.textContent = '❌ Error: ' + e.message; status.style.color='#ff6666';
   }
 });
 
-document.getElementById('dev-input').addEventListener('keydown', e => {
-  e.stopPropagation();
-  if (e.key !== 'Enter') return;
-  const cmd = e.target.value.trim().toLowerCase();
-  const out = document.getElementById('dev-output');
-  e.target.value = '';
-  if (cmd === 'close' || cmd === 'exit') {
-    devOpen = false;
-    document.getElementById('dev-console').style.display = 'none';
-    out.textContent = '';
-  } else if (cmd.startsWith('coins ')) {
-    const n = parseInt(cmd.split(' ')[1]);
-    if (!isNaN(n)) { coins += n; saveShop(); updateShopCoins(); out.textContent = `✅ Added ${n} coins. Total: ${coins}`; }
-    else out.textContent = '❌ Usage: coins 1000000';
-  } else if (cmd.startsWith('setcoins ')) {
-    const n = parseInt(cmd.split(' ')[1]);
-    if (!isNaN(n)) { coins = n; saveShop(); updateShopCoins(); out.textContent = `✅ Coins set to ${n}`; }
-    else out.textContent = '❌ Usage: setcoins 500';
-  } else if (cmd === 'killme') {
-    if (running) { endGame(); out.textContent = '💀 RIP'; }
-    else out.textContent = '❌ Not in a game';
-  } else if (cmd === 'resetshop') {
-    ownedSkins = {}; activeSkins = {colour:'default',hat:'none',char:'default',effect:'none'};
-    coins = 0; saveShop(); updateShopCoins(); out.textContent = '✅ Shop reset';
-  } else if (cmd === 'unlockall') {
-    [...SHOP.colours,...SHOP.hats,...SHOP.chars,...SHOP.effects].forEach(i => ownedSkins[i.id]=true);
-    saveShop(); out.textContent = '✅ All skins unlocked';
-  } else if (cmd === 'speedboost') {
-    if (running) { speedBoostTimer=60*8; jayj.speed=BASE_SPEED*1.8; updateHUD(); out.textContent = '🍎 Speed boost activated!'; }
-    else out.textContent = '❌ Not in a game';
-  } else if (cmd === 'cheeserain') {
-    if (running) { triggerRandomEvent('cheeserain'); out.textContent = '🧀 Cheese rain!'; }
-    else out.textContent = '❌ Not in a game';
-  } else if (cmd === 'veggiestorm') {
-    if (running) { triggerRandomEvent('veggiestorm'); out.textContent = '🥦 Veggie storm!'; }
-    else out.textContent = '❌ Not in a game';
-  } else if (cmd === 'giantcheese') {
-    if (running) { triggerRandomEvent('giantcheese'); out.textContent = '⭐ Giant cheese!'; }
-    else out.textContent = '❌ Not in a game';
-  } else if (cmd === 'help') {
-    out.textContent = 'Commands: coins <n> | setcoins <n> | killme | unlockall | resetshop | speedboost | cheeserain | veggiestorm | giantcheese | close';
-  } else {
-    out.textContent = `❌ Unknown: "${cmd}" — type help`;
-  }
+// Local action buttons
+document.querySelectorAll('.dev-action-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const cmd = btn.dataset.cmd;
+    const out = document.getElementById('dev-action-status');
+    if (cmd === 'unlockall') {
+      [...SHOP.colours,...SHOP.hats,...SHOP.chars,...SHOP.effects].forEach(i => ownedSkins[i.id]=true);
+      saveShop(); out.textContent = '✅ All skins unlocked'; out.style.color='#39ff14';
+    } else if (cmd === 'resetshop') {
+      ownedSkins = {}; activeSkins = {colour:'default',hat:'none',char:'default',effect:'none'};
+      coins = 0; saveShop(); updateShopCoins(); out.textContent = '✅ Shop reset'; out.style.color='#ff6666';
+    } else if (cmd === 'cheeserain') {
+      if (running) { triggerRandomEvent('cheeserain'); out.textContent = '🧀 Cheese rain!'; out.style.color='#ffaa00'; closeDevMenu(); }
+      else { out.textContent = '❌ Not in a game'; out.style.color='#ff6666'; }
+    } else if (cmd === 'killme') {
+      if (running) { endGame(); out.textContent = '💀 RIP'; out.style.color='#ff4444'; closeDevMenu(); }
+      else { out.textContent = '❌ Not in a game'; out.style.color='#ff6666'; }
+    }
+  });
 });
 
 document.getElementById('start-btn').addEventListener('click', () => { hardcoreMode=false; startGame(); });

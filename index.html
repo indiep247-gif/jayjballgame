@@ -416,6 +416,13 @@
     <span class="bonus">❤️ Every 1000 pts</span> = bonus life (max 5)!<br><br>
     Arrow keys / WASD <em>or</em> use the joystick.
   </div>
+  <div style="position:relative;display:flex;flex-direction:column;align-items:center;">
+    <button class="btn-small" id="ctrl-menu-btn" onclick="cycleControls()" style="margin-bottom:4px;">🕹️ Keyboard</button>
+    <div id="mobile-ctrl-hint" style="position:absolute;top:50%;left:calc(100% + 12px);transform:translateY(-50%);white-space:nowrap;font-family:'Fredoka One',cursive;font-size:.72rem;color:#39ff14;background:rgba(10,10,20,.92);border:2px solid #39ff14;border-radius:10px;padding:4px 10px;pointer-events:none;z-index:5;">
+      <div style="position:absolute;top:50%;left:-10px;transform:translateY(-50%);width:0;height:0;border-top:8px solid transparent;border-bottom:8px solid transparent;border-right:10px solid #39ff14;"></div>
+      On mobile? Change to D-Pad or Joystick!
+    </div>
+  </div>
   <button class="btn" id="play-btn" onclick="togglePlayModes()">🎮 PLAY</button>
   <div id="play-modes" style="display:none;flex-direction:column;gap:8px;width:100%;max-width:340px;">
     <button class="btn" id="start-btn">🧀 CLASSIC MODE</button>
@@ -440,13 +447,6 @@
     <button class="btn-small" id="lb-open-btn">🏆 Leaderboard</button>
     <button class="btn-small" id="achvs-btn" onclick="openAchievements()">🎖️ Achvs</button>
     <button class="btn-small" id="daily-btn" onclick="openDaily()">📅 Daily</button>
-    <div style="position:relative;display:flex;flex-direction:column;align-items:center;">
-      <button class="btn-small" style="width:100%" id="ctrl-menu-btn" onclick="cycleControls()">🕹️ Keyboard</button>
-      <div id="mobile-ctrl-hint" style="position:absolute;top:calc(100% + 10px);left:50%;transform:translateX(-50%);white-space:nowrap;font-family:'Fredoka One',cursive;font-size:.72rem;color:#39ff14;background:rgba(10,10,20,.92);border:2px solid #39ff14;border-radius:10px;padding:4px 10px;pointer-events:none;z-index:5;">
-        <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;border-bottom:10px solid #39ff14;"></div>
-        On mobile? Change to D-Pad or Joystick!
-      </div>
-    </div>
   </div>
   <div id="hardcore-badge">☠️ HARDCORE — 1 LIFE ONLY</div>
   <details style="max-width:340px;width:100%;text-align:left;">
